@@ -1,0 +1,12 @@
+.git
+.github
+.ruff_cache
+__pycache__
+build
+dist
+report
+tests
+*.pyc
+*.zip
+*.log
+docs/**/*.map
