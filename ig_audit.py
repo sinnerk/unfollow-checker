@@ -92,6 +92,28 @@ def _profile_url_username(value: Any) -> str | None:
     return clean_username(value)
 
 
+def merge_entries(
+    entries: list[tuple[str, int | None]],
+) -> list[tuple[str, int | None]]:
+    """Collapse repeated handles inside one record, keeping the newest date.
+
+    A record usually carries the handle twice (``value`` and the profile
+    ``href``), so counting every candidate would double the row count and make
+    the integrity panel claim thousands of duplicates that do not exist.
+    """
+    merged: dict[str, tuple[str, int | None]] = {}
+    for username, timestamp in entries:
+        key = username.casefold()
+        existing = merged.get(key)
+        if existing is None:
+            merged[key] = (username, timestamp)
+            continue
+        name, best = existing
+        if timestamp is not None and (best is None or timestamp > best):
+            merged[key] = (name, timestamp)
+    return list(merged.values())
+
+
 def extract_entries(record: Any) -> list[tuple[str, int | None]]:
     """Pull all username/timestamp candidates out of one export record."""
     found: list[tuple[str, int | None]] = []
@@ -103,10 +125,10 @@ def extract_entries(record: Any) -> list[tuple[str, int | None]]:
 
     if isinstance(record, str):
         add(record)
-        return found
+        return merge_entries(found)
 
     if not isinstance(record, dict):
-        return found
+        return merge_entries(found)
 
     record_ts = normalize_timestamp(record.get("timestamp"))
 
@@ -138,7 +160,7 @@ def extract_entries(record: Any) -> list[tuple[str, int | None]]:
         add(record.get("title"), record_ts)
         add(record.get("href"), record_ts)
 
-    return found
+    return merge_entries(found)
 
 
 def extract_sections(data: Any) -> list[tuple[str | None, list[Any]]]:
@@ -361,6 +383,23 @@ def load_export(
     followers: dict[str, dict[str, Any]] = {}
     json_kinds: set[str] = set()
     html_kinds: set[str] = set()
+    sources: list[dict[str, Any]] = []
+    rows_read = 0
+    rows_skipped = 0
+    duplicates = 0
+    missing_dates = 0
+
+    def ingest(kind: str, entries: list[tuple[str, int | None]], source: str) -> None:
+        nonlocal rows_read, duplicates, missing_dates
+        target = following if kind == "following" else followers
+        before = len(target)
+        for username, timestamp in entries:
+            if timestamp is None:
+                missing_dates += 1
+            remember(target, username, timestamp)
+        rows_read += len(entries)
+        duplicates += len(entries) - (len(target) - before)
+        sources.append({"file": source, "kind": kind, "rows": len(entries)})
 
     for filename, data in documents:
         filename_kind = kind_from_filename(filename)
@@ -376,19 +415,20 @@ def load_export(
                 continue
 
             json_kinds.add(kind)
-            target = following if kind == "following" else followers
+            entries: list[tuple[str, int | None]] = []
             for record in records:
-                for username, timestamp in extract_entries(record):
-                    remember(target, username, timestamp)
+                found = extract_entries(record)
+                if not found:
+                    rows_skipped += 1
+                entries.extend(found)
+            ingest(kind, entries, filename)
 
     for filename, text in pages:
         kind = kind_from_filename(filename)
         if kind not in ("following", "followers"):
             continue
         html_kinds.add(kind)
-        target = following if kind == "following" else followers
-        for username, timestamp in extract_html_entries(text):
-            remember(target, username, timestamp)
+        ingest(kind, extract_html_entries(text), filename)
 
     found = json_kinds | html_kinds
     if "following" not in found or "followers" not in found:
@@ -436,6 +476,24 @@ def load_export(
                 "superset, or re-download the export in JSON format for an exact answer.",
             )
 
+    info["integrity"] = {
+        "sources": sources,
+        "rowsRead": rows_read,
+        "rowsSkipped": rows_skipped,
+        "duplicates": duplicates,
+        "missingTimestamps": missing_dates,
+        "followers": len(followers),
+        "following": len(following),
+        "reportedFollowers": reported or None,
+        "complete": not info["truncation"],
+    }
+
+    if rows_skipped:
+        info["warnings"].append(
+            f"{rows_skipped:,} row(s) in the export could not be read as an account "
+            "and were ignored. That is unusual; please report it with your export."
+        )
+
     return following, followers, info
 
 
@@ -478,6 +536,7 @@ def build_payload(export_path: Path) -> dict[str, Any]:
         "format": info["format"],
         "truncation": info["truncation"],
         "warnings": info["warnings"],
+        "integrity": info["integrity"],
         "counts": {
             "following": len(following),
             "followers": len(followers),
@@ -616,6 +675,59 @@ HTML_TEMPLATE = r"""<!doctype html>
   }
 
   .alert li + li { margin-top: 8px; }
+
+  .verify {
+    margin: 0 0 22px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .verify summary {
+    cursor: pointer;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    list-style: none;
+  }
+
+  .verify summary::-webkit-details-marker { display: none; }
+
+  .verify summary::before {
+    content: "+";
+    font-family: ui-monospace, monospace;
+    color: var(--muted-2);
+  }
+
+  .verify[open] summary::before { content: "\2212"; }
+
+  .verify ul {
+    margin: 12px 0 0;
+    padding-left: 18px;
+    line-height: 1.8;
+  }
+
+  .verify li::marker { color: var(--muted-2); }
+
+  .badge {
+    margin-left: auto;
+    padding: 3px 9px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .badge.ok { background: rgba(74, 222, 128, .12); color: #7ee2a1; border: 1px solid rgba(74, 222, 128, .35); }
+  .badge.bad { background: rgba(242, 85, 90, .12); color: #ff9ea1; border: 1px solid rgba(242, 85, 90, .4); }
+
 
   .hero { max-width: 680px; }
 
@@ -1221,6 +1333,11 @@ HTML_TEMPLATE = r"""<!doctype html>
     </div>
   </section>
 
+  <details class="verify" id="verify" open>
+    <summary>Export integrity<span class="badge ok" id="verify-badge">checking</span></summary>
+    <ul id="verify-list"></ul>
+  </details>
+
   <section class="panel">
     <div class="tabs" role="tablist" aria-label="Account categories">
       <button class="tab is-active" type="button" role="tab" aria-selected="true" data-view="notFollowingBack">
@@ -1248,7 +1365,7 @@ HTML_TEMPLATE = r"""<!doctype html>
       </label>
       <button class="btn" type="button" id="copy-list">Copy list</button>
       <button class="btn" type="button" id="download-csv">CSV</button>
-      <button class="btn primary" type="button" id="open-next">Open next &nearr;</button>
+      <button class="btn primary" type="button" id="open-next" title="Opens the next unchecked profile and marks it checked off">Open next &amp; check off &nearr;</button>
     </div>
 
     <div class="progress-wrap" id="progress-wrap">
@@ -1379,6 +1496,54 @@ HTML_TEMPLATE = r"""<!doctype html>
       list.appendChild(item);
     }
     $("alert").hidden = false;
+  }
+
+  function renderIntegrity() {
+    const data = payload.integrity;
+    if (!data) {
+      $("verify").hidden = true;
+      return;
+    }
+    const items = [];
+    for (const source of data.sources || []) {
+      items.push(source.file + " — " + formatNumber(source.rows) + " rows, read as " + source.kind);
+    }
+    items.push(
+      "Rows read " + formatNumber(data.rowsRead) +
+      " · unique followers " + formatNumber(data.followers) +
+      " · unique following " + formatNumber(data.following)
+    );
+    items.push(
+      "Duplicates merged " + formatNumber(data.duplicates) +
+      " · unreadable rows " + formatNumber(data.rowsSkipped) +
+      " · entries without a follow date " + formatNumber(data.missingTimestamps)
+    );
+    if (data.reportedFollowers) {
+      const diff = data.followers - data.reportedFollowers;
+      items.push(
+        "Instagram reported " + formatNumber(data.reportedFollowers) + " followers" +
+        (diff === 0
+          ? " — exact match."
+          : diff > 0
+            ? " — export lists " + formatNumber(diff) + " more, gained since that snapshot."
+            : " — export lists " + formatNumber(-diff) + " fewer, which is the truncation problem.")
+      );
+    } else {
+      items.push("No follower total found in this export to cross-check against.");
+    }
+
+    const list = $("verify-list");
+    list.replaceChildren();
+    for (const text of items) {
+      const item = document.createElement("li");
+      item.textContent = text;
+      list.appendChild(item);
+    }
+
+    const badge = $("verify-badge");
+    const complete = data.complete && !data.rowsSkipped;
+    badge.textContent = complete ? "complete" : "incomplete";
+    badge.className = "badge " + (complete ? "ok" : "bad");
   }
 
   function fillStats() {
@@ -1624,7 +1789,11 @@ HTML_TEMPLATE = r"""<!doctype html>
       return;
     }
     openProfile(profileUrl(next.username));
-    toast("Opened @" + next.username + ". Unfollow manually, then check it off.");
+    handled.add(keyFor(next));
+    saveHandled();
+    renderList();
+    updateProgress();
+    toast("Opened @" + next.username + " and checked it off. Uncheck the row to undo.");
   });
 
   $("copy-list").addEventListener("click", async () => {
@@ -1653,6 +1822,7 @@ HTML_TEMPLATE = r"""<!doctype html>
 
   metaText();
   renderWarnings();
+  renderIntegrity();
   fillStats();
   updateProgress();
   renderList();

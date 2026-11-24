@@ -97,6 +97,42 @@ class ParserTests(unittest.TestCase):
             self.assertEqual(usernames(payload["notFollowingBack"]), ["bob", "Eve_99"])
             self.assertEqual(usernames(payload["fans"]), ["Zoe"])
 
+    def test_record_with_value_and_href_counts_once(self) -> None:
+        record = follower_record("alice")
+        self.assertEqual(ig_audit.extract_entries(record), [("alice", TIMESTAMP)])
+
+    def test_integrity_counts_one_row_per_account(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            export = make_export(
+                Path(temporary),
+                followers=["alice", "bob"],
+                following=["alice", "bob", "carol"],
+            )
+
+            integrity = ig_audit.build_payload(export)["integrity"]
+
+            self.assertEqual(integrity["rowsRead"], 5)
+            self.assertEqual(integrity["duplicates"], 0)
+            self.assertEqual(integrity["rowsSkipped"], 0)
+            self.assertEqual(integrity["missingTimestamps"], 0)
+            self.assertEqual(integrity["followers"], 2)
+            self.assertEqual(integrity["following"], 3)
+            self.assertTrue(integrity["complete"])
+
+    def test_repeated_records_are_reported_as_duplicates(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            export = make_export(
+                Path(temporary),
+                followers=["alice", "alice"],
+                following=["alice"],
+            )
+
+            integrity = ig_audit.build_payload(export)["integrity"]
+
+            self.assertEqual(integrity["rowsRead"], 3)
+            self.assertEqual(integrity["duplicates"], 1)
+            self.assertEqual(integrity["followers"], 1)
+
     def test_reads_all_split_follower_files(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
