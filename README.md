@@ -6,6 +6,19 @@ A dead-simple, local app that shows who does **not** follow you back on Instagra
 
 It reads the official **data export** from Instagram (JSON, or HTML in current versions). It does not log in, scrape the website, unfollow anyone automatically, or upload your data anywhere.
 
+## Use it in your browser (no install, works on a phone)
+
+### **[sinnerk.github.io/local-instagram-unfollower](https://sinnerk.github.io/local-instagram-unfollower/)**
+
+Drop your export ZIP on the page. The whole comparison runs in the browser tab — nothing is uploaded, there is no account and no analytics. It includes:
+
+- the same exact counts as the desktop tool (same parsing rules, verified against the CLI on a real export),
+- an export-integrity panel (files read, duplicate rows, truncation warnings),
+- check-off progress saved per export, "Open next & check off", search, CSV,
+- an optional **dead / deactivated account** checker that runs as a bookmarklet inside your own logged-in Instagram tab, plus a tutorial page for every step.
+
+> Why the bookmarklet: Instagram only answers "does this profile still exist?" for a logged-in visitor — every profile URL returns the same generic page when logged out, so it cannot be detected offline. The script is read-only, runs at ~1 account per second, and passes results back in the URL fragment (never sent to a server).
+
 ## The easy way (Windows, no Python)
 
 ### 1. Get your Instagram export
