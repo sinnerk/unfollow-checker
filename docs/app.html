@@ -7,6 +7,7 @@
 <meta name="description" content="Drop your Instagram export and get the exact list of accounts that don't follow you back. Everything runs in your browser.">
 <link rel="canonical" href="https://sinnerk.github.io/unfollow-checker/app.html">
 <meta name="theme-color" content="#0b0b10">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="assets/icon.png">
 <link rel="apple-touch-icon" href="assets/icon.png">
 <link rel="stylesheet" href="assets/site.css">
@@ -169,6 +170,20 @@
       </p>
     </details>
 
+
+    <details class="panel" id="devices-panel">
+      <summary>Move progress between devices <span class="badge">optional</span></summary>
+      <p style="margin-top:10px">
+        Check-offs and gone marks live in <b>this browser only</b>. Download them as a small file to
+        continue on another device, or to keep them safe before clearing your browser data.
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="export-progress" type="button">Download progress</button>
+        <button class="btn ghost" id="import-progress" type="button">Restore from a file</button>
+        <input type="file" id="progress-file" accept="application/json,.json" hidden>
+      </div>
+      <p id="progress-note" style="margin:10px 0 0;font-size:13px"></p>
+    </details>
     <details class="panel" id="integrity-panel">
       <summary>Export integrity <span class="badge" id="integrity-badge">checking</span></summary>
       <div id="integrity-body"></div>

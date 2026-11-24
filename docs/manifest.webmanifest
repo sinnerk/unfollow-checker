@@ -1,0 +1,14 @@
+{
+  "name": "Unfollow Checker",
+  "short_name": "Unfollow",
+  "description": "See who doesn't follow you back on Instagram. Reads your own data export in the browser.",
+  "start_url": "app.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0b10",
+  "theme_color": "#0b0b10",
+  "icons": [
+    { "src": "assets/icon.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

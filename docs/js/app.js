@@ -161,7 +161,11 @@ async function handleFiles(fileList) {
   $("import-status").hidden = false;
   $("status-text").textContent = "Reading export…";
   $("status-bar").style.width = "8%";
-  $("status-sub").textContent = files.map((f) => f.name).join(", ");
+  const biggest = Math.max(...files.map((f) => f.size || 0));
+  $("status-sub").textContent =
+    (biggest > 150 * 1024 * 1024
+      ? `Large export (${Math.round(biggest / 1048576)} MB) — on a phone this can take a minute. `
+      : "") + files.map((f) => f.name).join(", ");
 
   try {
     let parsed;
@@ -917,6 +921,67 @@ $("clear-dead").addEventListener("click", () => {
   saveState();
   renderList();
   toast("Gone marks cleared.");
+});
+
+
+/* ------------------------------------------------------------------ */
+/* progress backup (moving devices, or surviving a browser wipe)       */
+/* ------------------------------------------------------------------ */
+
+$("export-progress").addEventListener("click", () => {
+  if (!result) { toast("Import an export first."); return; }
+  const payload = {
+    app: "unfollow-checker",
+    version: 1,
+    fingerprint,
+    source: result.sourceName || "",
+    savedAt: new Date().toISOString(),
+    handled: [...state.handled],
+    gone: [...state.gone],
+    alive: [...state.alive],
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = el("a", { href: url, download: "unfollow-checker-progress.json" });
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  $("progress-note").textContent =
+    `Saved ${state.handled.size} check-off(s) and ${state.gone.size} gone mark(s).`;
+});
+
+$("import-progress").addEventListener("click", () => $("progress-file").click());
+
+$("progress-file").addEventListener("change", async (event) => {
+  const file = event.target.files && event.target.files[0];
+  event.target.value = "";
+  if (!file) return;
+  if (!result) { toast("Import your export first, then restore progress."); return; }
+  let data;
+  try {
+    data = JSON.parse(await file.text());
+  } catch {
+    toast("That file is not valid JSON.");
+    return;
+  }
+  if (!data || !Array.isArray(data.handled)) {
+    toast("That does not look like a progress file.");
+    return;
+  }
+  if (data.fingerprint && data.fingerprint !== fingerprint) {
+    if (!confirm("That progress belongs to a different export. Merge it into this one anyway?")) return;
+  }
+  let added = 0;
+  for (const key of data.handled) { if (!state.handled.has(key)) { state.handled.add(key); added += 1; } }
+  for (const key of data.gone || []) { state.gone.add(key); state.alive.delete(key); }
+  for (const key of data.alive || []) { if (!state.gone.has(key)) state.alive.add(key); }
+  saveState();
+  if (state.gone.size) $("hide-gone").checked = true;
+  renderList();
+  $("progress-note").textContent =
+    `Restored — ${state.handled.size} check-off(s), ${state.gone.size} gone mark(s) (${added} new).`;
+  toast(`Restored ${added} check-off(s).`);
 });
 
 $("new-export").addEventListener("click", () => {
