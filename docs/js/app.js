@@ -216,13 +216,10 @@ function renderResultScreen() {
     const note = $("server-note");
     if (!button) return;
     if (!ok) {
-      button.disabled = true;
-      button.textContent = "Server check unavailable";
-      if (note) {
-        note.hidden = false;
-        note.textContent =
-          "The shared checker isn't running right now. Use Option 2 below — it works today and needs nothing from us.";
-      }
+      // Nothing half-built in a public launch: drop the option entirely and let
+      // the page keep only the path that actually works today.
+      const block = $("server-option");
+      if (block) block.hidden = true;
     }
   });
   $("screen-import").hidden = true;
