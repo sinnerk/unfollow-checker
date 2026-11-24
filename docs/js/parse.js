@@ -284,6 +284,9 @@ export function analyzeExport(files) {
     }
 
     if (lower.endsWith(".json")) {
+      // Threads and messaging folders carry same-named following.json files
+      // that are not the social graph — never ingest those.
+      if (lower.includes("/threads/") || lower.includes("\\threads\\")) continue;
       let data;
       try {
         data = JSON.parse(String(file.text).replace(/^\uFEFF/, ""));

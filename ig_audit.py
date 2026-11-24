@@ -402,6 +402,10 @@ def load_export(
         sources.append({"file": source, "kind": kind, "rows": len(entries)})
 
     for filename, data in documents:
+        # Threads and messaging folders contain same-named following.json files
+        # that are not the social graph; ingesting them inflates the counts.
+        if "/threads/" in f"/{filename.replace(chr(92), '/').lower()}":
+            continue
         filename_kind = kind_from_filename(filename)
         for section, records in extract_sections(data):
             if section == "relationships_following":

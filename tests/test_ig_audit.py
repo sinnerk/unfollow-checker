@@ -181,6 +181,25 @@ class ParserTests(unittest.TestCase):
             self.assertEqual(usernames(payload["notFollowingBack"]), ["carol"])
             self.assertEqual(usernames(payload["mutual"]), ["alice"])
 
+    def test_threads_following_file_is_ignored(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            folder = default_folder(root)
+            write_json(folder / "followers_1.json", [follower_record("alice")])
+            write_json(
+                folder / "following.json",
+                {"relationships_following": [following_record("bob")]},
+            )
+            threads = root / "your_instagram_activity" / "threads"
+            threads.mkdir(parents=True)
+            write_json(
+                threads / "following.json",
+                [{"title": "thread.account", "string_list_data": [{"timestamp": TIMESTAMP}]}],
+            )
+            following, followers = ig_audit.load_follow_lists(root)
+            self.assertEqual(sorted(following), ["bob"])
+            self.assertEqual(sorted(followers), ["alice"])
+
     def test_url_only_records_and_old_mobile_links(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
