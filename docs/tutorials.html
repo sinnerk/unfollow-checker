@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tutorials — Unfollow Checker</title>
+<meta name="description" content="Step by step: download your Instagram export, import it, read the lists, clean up, and verify dead accounts.">
+<meta name="theme-color" content="#0b0b10">
+<link rel="icon" href="assets/icon.png">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .tut { display: grid; gap: 14px; }
+  .tut .panel h2 { display: flex; align-items: center; gap: 10px; }
+  .num-pill {
+    width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    background: linear-gradient(135deg, var(--accent), var(--accent-3)); color: #fff;
+    font-size: 13px; font-weight: 700; flex: none;
+  }
+  .toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 6px; }
+  .toc a {
+    font-size: 13.5px; color: var(--muted); border: 1px solid var(--line);
+    border-radius: 999px; padding: 8px 13px; background: var(--panel);
+  }
+  .toc a:hover { color: var(--text); text-decoration: none; border-color: var(--muted-2); }
+  .kbd {
+    font: 12.5px ui-monospace, Menlo, Consolas, monospace;
+    border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px;
+    padding: 1px 6px; background: var(--panel-2);
+  }
+  ol.tight li { margin-bottom: 8px; color: var(--muted); }
+  ol.tight li b { color: var(--text); }
+  .note { font-size: 13.5px; color: var(--muted); border-left: 3px solid var(--line); padding-left: 12px; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="./">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" stroke="url(#g2)" stroke-width="2"/>
+        <circle cx="12" cy="12" r="4.2" stroke="url(#g2)" stroke-width="2"/>
+        <circle cx="17.4" cy="6.6" r="1.3" fill="#e1306c"/>
+        <defs><linearGradient id="g2" x1="0" y1="0" x2="24" y2="24">
+          <stop stop-color="#f77737"/><stop offset=".5" stop-color="#e1306c"/><stop offset="1" stop-color="#833ab4"/>
+        </linearGradient></defs>
+      </svg>
+      Unfollow Checker
+    </a>
+    <nav>
+      <a href="./">Tool</a>
+      <a href="privacy.html" class="opt">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero" style="padding-bottom:0">
+    <h1>Tutorials</h1>
+    <p>Everything from "where do I even get my data" to "why does this account look wrong".</p>
+  </div>
+
+  <div class="toc">
+    <a href="#download">1. Get your export</a>
+    <a href="#import">2. Import it</a>
+    <a href="#read">3. Read the numbers</a>
+    <a href="#clean">4. Work the list</a>
+    <a href="#dead">5. Dead accounts</a>
+    <a href="#phone">On a phone</a>
+    <a href="#trouble">Troubleshooting</a>
+  </div>
+
+  <div class="tut">
+
+    <section class="panel" id="download">
+      <h2><span class="num-pill">1</span> Get your export from Instagram</h2>
+      <p>Instagram will email you a ZIP file. It can take anywhere from a few minutes to a few hours, depending on account size.</p>
+      <p><b>On your phone (app):</b></p>
+      <ol class="tight">
+        <li>Profile → tap <b>☰</b> (top right) → <b>Accounts Center</b>.</li>
+        <li><b>Your information and permissions</b> → <b>Download your information</b>.</li>
+        <li>Pick the account, then <b>Create export</b> (or "Request a download").</li>
+        <li>Choose <b>Download to device</b>, format <b>JSON</b>, date range <b>All time</b>.</li>
+        <li>Under "Select information", untick everything except <b>Followers and following</b> — it keeps the file tiny and fast.</li>
+        <li>Submit. Instagram emails you a link when it's ready.</li>
+      </ol>
+      <p style="margin-top:12px"><b>On a computer:</b> same path at <a href="https://accountscenter.instagram.com/info_and_permissions/dyi/" target="_blank" rel="noopener" style="color:var(--text);text-decoration:underline">accountscenter.instagram.com</a> → Your information and permissions → Download your information.</p>
+      <div class="note">
+        Choose <b>JSON</b>, not HTML. HTML exports silently drop older rows from long lists, which makes people look like they don't follow you back when they do.
+      </div>
+    </section>
+
+    <section class="panel" id="import">
+      <h2><span class="num-pill">2</span> Import it</h2>
+      <ol class="tight">
+        <li>Download the ZIP from the email — keep it zipped, don't unzip it.</li>
+        <li>Open the <a href="./" style="color:var(--text);text-decoration:underline">tool</a> and drop the ZIP on the big box (or tap it and pick the file).</li>
+        <li>Parsing takes about a second for a normal account. A 500&nbsp;MB export can take longer — leave the tab open.</li>
+      </ol>
+      <p class="note">The file is read by JavaScript inside this tab. There is no upload step, no account, and no analytics on that path — you can test it by turning off Wi-Fi after the page loads.</p>
+    </section>
+
+    <section class="panel" id="read">
+      <h2><span class="num-pill">3</span> Read the numbers</h2>
+      <table class="mini">
+        <thead><tr><th>Card</th><th>What it means</th></tr></thead>
+        <tbody>
+          <tr><td><b>Following</b></td><td>accounts you follow</td></tr>
+          <tr><td><b>Followers</b></td><td>accounts that follow you</td></tr>
+          <tr><td><b>Don't follow back</b></td><td>you follow them, they don't follow you</td></tr>
+          <tr><td><b>Follows you only</b></td><td>they follow you, you don't follow back</td></tr>
+          <tr><td><b>Mutual</b></td><td>both directions</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:12px">Open <b>Export integrity</b> under the list to see exactly which files were read, how many rows each held, and whether the follower list looks truncated. If Instagram's own insights page disagrees with the number of rows in the export, you get a warning — that is the honest case where a "not following back" entry might actually follow you.</p>
+    </section>
+
+    <section class="panel" id="clean">
+      <h2><span class="num-pill">4</span> Work the list</h2>
+      <ul style="color:var(--muted);padding-left:18px;margin:0 0 10px">
+        <li><b>Open next &amp; check off</b> — opens the next unchecked profile in a new tab <i>and</i> marks it done, so you always come back to the right place.</li>
+        <li><b>The checkbox</b> — click any row to mark it done/un-done by hand.</li>
+        <li><b>Hide checked</b> — shrinks the list to what's left.</li>
+        <li><b>Copy usernames</b> / <b>CSV</b> — take the list elsewhere.</li>
+        <li><b>Search</b> — filter by any part of a handle.</li>
+      </ul>
+      <p>Progress is saved in this browser, keyed to <i>this</i> export. Import a newer export and you start clean instead of inheriting stale check-offs. <b>Reset</b> clears check-offs for the current export.</p>
+      <p class="note">This tool never unfollows anyone for you. Instagram has no public unfollow API, and any site claiming to do it is either scraping your password or breaking the rules. Open the profile, tap Unfollow, come back — that's the safe loop.</p>
+    </section>
+
+    <section class="panel" id="dead">
+      <h2><span class="num-pill">5</span> Find dead or deactivated accounts</h2>
+      <p>An export is a snapshot of handles, not a live directory. If someone deleted or deactivated their account after it was captured, they still appear in your following list — and they can never follow you back.</p>
+      <p>Instagram only answers "does this profile still exist?" for a logged-in session. Logged out, <i>every</i> profile URL returns the same generic page, so there is nothing to check offline. The fix: run the check inside your own Instagram tab.</p>
+      <ol class="tight">
+        <li>On the tool page, open <b>Find dead or deactivated accounts</b>.</li>
+        <li>Drag the <b>Check N accounts</b> button to your bookmarks bar. (Bookmarks bar hidden? <span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">B</span> on Windows, <span class="kbd">⌘</span>+<span class="kbd">Shift</span>+<span class="kbd">B</span> on Mac.)</li>
+        <li>Go to <b>instagram.com</b> in the same browser, logged in.</li>
+        <li>Click the bookmark. A panel in the corner counts up: gone / exists / failed, about one account per second.</li>
+        <li>When it finishes it opens this page again with the results applied — dead accounts get a <b>gone</b> badge and an <b>exists</b> badge appears on the ones Instagram confirmed.</li>
+      </ol>
+      <p class="note">The checker only reads profile pages. It never follows, unfollows, likes, or messages. If you'd rather not run it, you can mark rows as gone by hand.</p>
+    </section>
+
+    <section class="panel" id="phone">
+      <h2>On a phone</h2>
+      <ul style="color:var(--muted);padding-left:18px;margin:0">
+        <li>The whole site works in mobile browsers — import, lists, search, CSV.</li>
+        <li>Request the export from the Instagram app, then open the emailed link and download the ZIP to your phone.</li>
+        <li>When the file picker opens, choose <b>Downloads</b> (Android) or <b>Files</b> (iOS) and pick the ZIP.</li>
+        <li><b>Bookmarklets don't run in mobile browsers</b> and the Instagram in-app browser is worse. On a phone, tap a profile, and if you see "Sorry, this page isn't available", tap the 🚫 button on that row to mark it gone.</li>
+        <li>Instagram's in-app browser (the one inside the Instagram app) can't download files properly — open the link in Chrome or Safari instead of the in-app view.</li>
+      </ul>
+    </section>
+
+    <section class="panel" id="trouble">
+      <h2>Troubleshooting</h2>
+      <p><b>"No follower or following list was found."</b><br>Your export didn't include those two sections. Re-request it and tick <b>Followers and following</b>.</p>
+      <p><b>"Could not find the followers list."</b><br>The ZIP contains only one side. That usually means the export was made with a custom selection — same fix.</p>
+      <p><b>It says someone doesn't follow me back, but I'm sure they do.</b><br>Three honest reasons, in order of likelihood: the export is a day or two old (people followed you in between); you imported an <i>HTML</i> export, which drops older rows, so check the integrity panel for a truncation warning; or the two lists were captured at different times inside one big export. Re-download in JSON format for an exact answer.</p>
+      <p><b>The numbers look smaller than my profile.</b><br>Instagram caps what it writes into exports for very large accounts. The integrity panel tells you when its own insights page disagrees with the row count.</p>
+      <p><b>Nothing happens when I drop the file.</b><br>Some browsers refuse drag-and-drop from certain folders. Click the drop box and use the file picker instead.</p>
+      <p><b>The bookmarklet does nothing.</b><br>Chrome blocks <span class="kbd">javascript:</span> URLs pasted into the address bar; you must <i>drag</i> the button to the bookmarks bar and click it from there. On mobile, bookmarklets are not supported at all.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Prefer a desktop app?</h2>
+      <p>There's a Windows build that does the same comparison offline and writes an HTML report: <a href="https://github.com/sinnerk/local-instagram-unfollower/releases/latest" rel="noopener" style="color:var(--text);text-decoration:underline">releases on GitHub</a>. Same numbers, same privacy rules.</p>
+    </section>
+
+  </div>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>Unfollow Checker — free, open source, local-first.</span>
+    <a href="./">Tool</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="https://github.com/sinnerk/local-instagram-unfollower" rel="noopener">Source</a>
+  </div>
+</footer>
+</body>
+</html>
