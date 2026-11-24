@@ -23,3 +23,6 @@ build/
 dist/
 *.spec
 
+
+# web build artifacts
+docs/**/*.map
