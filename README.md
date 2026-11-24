@@ -4,7 +4,7 @@
 
 A dead-simple, local app that shows who does **not** follow you back on Instagram. Free and open source (MIT).
 
-It reads the official **JSON data export** from Instagram. It does not log in, scrape the website, unfollow anyone automatically, or upload your data anywhere.
+It reads the official **data export** from Instagram (JSON, or HTML in current versions). It does not log in, scrape the website, unfollow anyone automatically, or upload your data anywhere.
 
 ## The easy way (Windows, no Python)
 
@@ -126,10 +126,13 @@ Python is probably not installed or is not on `PATH`. Install Python 3.9+ and ti
 Click **Pick ZIP file** and choose the ZIP manually. Make sure it is the Instagram export, not the email attachment or an unrelated ZIP.
 
 **The counts look wrong**  
-Make sure you requested **Followers and following** in **JSON** format. Instagram may split large follower lists into `followers_1.json`, `followers_2.json`, and so on; keep the whole ZIP together so all chunks are read.
+Use the **JSON** format. Instagram truncates long lists in the HTML export — if the file was generated in HTML, the follower list can be missing hundreds of accounts, and anyone you follow who is missing from it is reported as not following back. The app compares the listed followers against Instagram's own total (from the export's insights page) and warns you when that happens. Instagram may also split large follower lists into `followers_1.json`, `followers_2.json`, and so on; keep the whole ZIP together so all chunks are read.
 
 **"Could not find the following list"**  
-The export was probably HTML instead of JSON. Request a new export and choose JSON.
+The export was probably generated without **Followers and following** selected. Request a new export and include that category.
+
+**Why does the report show a warning banner?**  
+Either the export is HTML (lists can be incomplete) or the follower list is shorter than the follower total Instagram reports in the same export. In both cases the "not following back" list is a superset: re-download the export in JSON format for an exact answer.
 
 **Instagram limits or warnings**  
 This tool does not unfollow automatically. If you choose to unfollow manually, do it slowly. Rapid bulk actions can trigger Instagram restrictions.

@@ -529,9 +529,10 @@ class App:
                     f"Following: {counts['following']:,}\n"
                     f"Followers: {counts['followers']:,}\n"
                     f"Not following back: {counts['notFollowingBack']:,}\n\n"
-                    f"Saved in: {report_dir}\n\n"
-                    "Opening it in your browser now."
                 )
+                for warning in payload.get("warnings") or []:
+                    message += f"Heads up: {warning}\n\n"
+                message += f"Saved in: {report_dir}\n\nOpening it in your browser now."
                 self._worker_events.put(("success", message, out_path))
             except Exception as error:
                 self._worker_events.put(("error", str(error), None))
@@ -556,7 +557,7 @@ class App:
             messagebox.showerror(
                 "Could not read that export",
                 f"{message}\n\n"
-                "Make sure you downloaded Instagram's JSON export and "
+                "Make sure you downloaded Instagram's export and "
                 "selected 'Followers and following'.",
             )
             self._finish(False)

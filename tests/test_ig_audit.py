@@ -252,6 +252,158 @@ class ParserTests(unittest.TestCase):
                 ig_audit.build_payload(root)
 
 
+def html_entry(
+    username: str,
+    stamp: str = "Nov 18, 2026 11:11 am",
+    mobile: bool = False,
+    url_label: bool = False,
+) -> str:
+    href = (
+        f"https://www.instagram.com/_u/{username}"
+        if mobile
+        else f"https://www.instagram.com/{username}"
+    )
+    label = href if url_label else username
+    return (
+        '<div class="pam _3-95 _2ph- _a6-g uiBoxWhite noborder"><div class="_a6-p">'
+        f'<div><div><a target="_blank" href="{href}">{label}</a></div>'
+        f"<div>{stamp}</div></div></div></div>"
+    )
+
+
+def html_page(title: str, rows: list[str]) -> str:
+    return (
+        f"<html><head><title>{title}</title></head><body><h1>{title}</h1><main>"
+        + "".join(rows)
+        + "</main></body></html>"
+    )
+
+
+class HtmlExportTests(unittest.TestCase):
+    def test_html_export_is_supported(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            folder = default_folder(root)
+            folder.mkdir(parents=True)
+            (folder / "followers_1.html").write_text(
+                html_page("Followers", [html_entry("alice"), html_entry("zoe")]),
+                encoding="utf-8",
+            )
+            (folder / "following.html").write_text(
+                html_page(
+                    "Following",
+                    [html_entry("alice", mobile=True), html_entry("bob", mobile=True)],
+                ),
+                encoding="utf-8",
+            )
+
+            payload = ig_audit.build_payload(root)
+
+            self.assertEqual(payload["format"], "html")
+            self.assertEqual(payload["counts"]["followers"], 2)
+            self.assertEqual(payload["counts"]["following"], 2)
+            self.assertEqual(payload["counts"]["notFollowingBack"], 1)
+            self.assertEqual(usernames(payload["notFollowingBack"]), ["bob"])
+
+    def test_html_export_with_url_link_text(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            folder = default_folder(root)
+            folder.mkdir(parents=True)
+            (folder / "followers_1.html").write_text(
+                html_page("Followers", [html_entry("alice"), html_entry("bob")]),
+                encoding="utf-8",
+            )
+            (folder / "following.html").write_text(
+                html_page(
+                    "Following",
+                    [
+                        html_entry("alice", mobile=True, url_label=True),
+                        html_entry("bob", mobile=True, url_label=True),
+                        html_entry("carol", mobile=True, url_label=True),
+                        '<a href="https://www.instagram.com/"><img src="logo.png" alt="Instagram"></a>',
+                    ],
+                ),
+                encoding="utf-8",
+            )
+
+            payload = ig_audit.build_payload(root)
+
+            self.assertEqual(payload["counts"]["following"], 3)
+            self.assertEqual(payload["counts"]["followers"], 2)
+            self.assertEqual(usernames(payload["notFollowingBack"]), ["carol"])
+
+    def test_threads_following_page_is_ignored(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            folder = default_folder(root)
+            folder.mkdir(parents=True)
+            (folder / "followers_1.html").write_text(
+                html_page("Followers", [html_entry("alice")]), encoding="utf-8"
+            )
+            (folder / "following.html").write_text(
+                html_page("Following", [html_entry("alice", mobile=True)]),
+                encoding="utf-8",
+            )
+            threads = root / "your_instagram_activity" / "threads"
+            threads.mkdir(parents=True)
+            (threads / "following.html").write_text(
+                html_page("Threads following", [html_entry("ghost")]),
+                encoding="utf-8",
+            )
+
+            payload = ig_audit.build_payload(root)
+
+            self.assertEqual(payload["counts"]["following"], 1)
+            self.assertEqual(payload["counts"]["notFollowingBack"], 0)
+
+    def test_truncated_html_export_warns(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            folder = default_folder(root)
+            folder.mkdir(parents=True)
+            (folder / "followers_1.html").write_text(
+                html_page("Followers", [html_entry("alice")]), encoding="utf-8"
+            )
+            (folder / "following.html").write_text(
+                html_page("Following", [html_entry("bob", mobile=True)]),
+                encoding="utf-8",
+            )
+            insights = root / "logged_information" / "past_instagram_insights"
+            insights.mkdir(parents=True)
+            (insights / "audience_insights.html").write_text(
+                "<table><tr><td>Followers</td><td>2,465</td></tr></table>",
+                encoding="utf-8",
+            )
+
+            payload = ig_audit.build_payload(root)
+
+            self.assertIsNotNone(payload["truncation"])
+            self.assertEqual(payload["truncation"]["reportedFollowers"], 2465)
+            self.assertEqual(payload["truncation"]["listedFollowers"], 1)
+            self.assertTrue(payload["warnings"])
+            self.assertIn("2,465", payload["warnings"][0])
+
+    def test_complete_export_has_no_truncation_warning(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            export = make_export(
+                Path(temporary), followers=["alice", "bob"], following=["alice", "bob"]
+            )
+
+            payload = ig_audit.build_payload(export)
+
+            self.assertEqual(payload["format"], "json")
+            self.assertIsNone(payload["truncation"])
+            self.assertEqual(payload["warnings"], [])
+
+    def test_reported_follower_count_parsing(self) -> None:
+        self.assertEqual(
+            ig_audit.parse_reported_follower_count("<td>Followers</td><td>2,465</td>"),
+            2465,
+        )
+        self.assertIsNone(ig_audit.parse_reported_follower_count("<td>Following</td>"))
+
+
 class OutputTests(unittest.TestCase):
     def test_cli_writes_all_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

@@ -18,13 +18,23 @@ import webbrowser
 import zipfile
 from collections.abc import Iterable
 from datetime import datetime, timezone
+from html import unescape
 from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlparse
 
 APP_NAME = "Local Instagram Unfollower"
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 USERNAME_RE = re.compile(r"^[A-Za-z0-9._]{1,64}$")
+TAG_RE = re.compile(r"<[^>]+>")
+HTML_ANCHOR_RE = re.compile(
+    r'<a[^>]*href="(?P<href>https?://(?:www\.)?instagram\.com/[^"]*)"[^>]*>'
+    r"(?P<label>.*?)</a>",
+    re.IGNORECASE | re.DOTALL,
+)
+HTML_DATE_RE = re.compile(r"</div><div>\s*([^<]{3,40}?)\s*</div>")
+HTML_DATE_FORMATS = ("%b %d, %Y %I:%M %p", "%b %d, %Y %I:%M%p", "%Y-%m-%d %H:%M:%S")
+INSIGHTS_SUFFIX = "past_instagram_insights/audience_insights.html"
 
 
 class AuditError(RuntimeError):
@@ -173,6 +183,43 @@ def kind_from_filename(name: str) -> str | None:
     return None
 
 
+def parse_html_timestamp(raw: str | None) -> int | None:
+    """Turn an HTML export date ("Nov 18, 2026 11:11 am") into a unix timestamp."""
+    if not raw:
+        return None
+    text = " ".join(raw.split())
+    for fmt in HTML_DATE_FORMATS:
+        try:
+            parsed = datetime.strptime(text, fmt).replace(tzinfo=timezone.utc)
+        except ValueError:
+            continue
+        return int(parsed.timestamp())
+    return None
+
+
+def extract_html_entries(text: str) -> list[tuple[str, int | None]]:
+    """Pull username/timestamp pairs out of an HTML-format export page.
+
+    The HTML export renders one profile link per entry, with the follow date in
+    the sibling div. The link text is either the handle or the full profile URL
+    depending on the page, so both are accepted; anything else is navigation.
+    """
+    entries: list[tuple[str, int | None]] = []
+    for match in HTML_ANCHOR_RE.finditer(text):
+        username = clean_username(match.group("href"))
+        if not username:
+            continue
+        label = unescape(TAG_RE.sub("", match.group("label"))).strip()
+        label_user = clean_username(label) if label else None
+        if label_user is None or label_user.casefold() != username.casefold():
+            continue
+        stamp = HTML_DATE_RE.search(text[match.end() : match.end() + 200])
+        entries.append(
+            (username, parse_html_timestamp(stamp.group(1)) if stamp else None)
+        )
+    return entries
+
+
 def remember(
     store: dict[str, dict[str, Any]], username: str, timestamp: int | None
 ) -> None:
@@ -219,19 +266,101 @@ def read_json_files(export_path: Path) -> list[tuple[str, Any]]:
     )
 
 
-def load_follow_lists(
+def _is_relationship_page(name: str) -> bool:
+    """True for followers_1.html / following.html, false for Threads or settings pages."""
+    normalized = name.replace("\\", "/").lower()
+    if "threads" in normalized:
+        return False
+    base = Path(normalized).name
+    return base.startswith(("followers", "following"))
+
+
+def read_html_files(export_path: Path) -> list[tuple[str, str]]:
+    """Read the HTML pages that hold follower/following rows, if any."""
+    pages: list[tuple[str, str]] = []
+    if export_path.is_dir():
+        for path in sorted(export_path.rglob("*.html")):
+            relative = path.relative_to(export_path).as_posix()
+            if not _is_relationship_page(relative):
+                continue
+            try:
+                pages.append(
+                    (relative, path.read_text(encoding="utf-8-sig", errors="replace"))
+                )
+            except OSError as exc:
+                print(f"Warning: skipped {path}: {exc}", file=sys.stderr)
+        return pages
+
+    with zipfile.ZipFile(export_path) as archive:
+        for info in sorted(archive.infolist(), key=lambda item: item.filename):
+            if info.is_dir() or not info.filename.lower().endswith(".html"):
+                continue
+            if not _is_relationship_page(info.filename):
+                continue
+            try:
+                text = archive.read(info).decode("utf-8-sig", errors="replace")
+            except (OSError, UnicodeDecodeError) as exc:
+                print(f"Warning: skipped {info.filename}: {exc}", file=sys.stderr)
+                continue
+            pages.append((info.filename, text))
+    return pages
+
+
+def read_insights_page(export_path: Path) -> str | None:
+    """Return the audience insights page, which states Instagram's own follower total."""
+    if export_path.is_dir():
+        for path in sorted(export_path.rglob("*.html")):
+            if path.as_posix().lower().endswith(INSIGHTS_SUFFIX):
+                try:
+                    return path.read_text(encoding="utf-8-sig", errors="replace")
+                except OSError:
+                    return None
+        return None
+
+    with zipfile.ZipFile(export_path) as archive:
+        for info in archive.infolist():
+            if info.filename.lower().endswith(INSIGHTS_SUFFIX):
+                try:
+                    return archive.read(info).decode("utf-8-sig", errors="replace")
+                except (OSError, UnicodeDecodeError):
+                    return None
+    return None
+
+
+def parse_reported_follower_count(html: str) -> int | None:
+    """Pull "Followers 2,465" out of the insights page."""
+    if not html:
+        return None
+    text = re.sub(
+        r"<(script|style)[^>]*>.*?</\1>", " ", html, flags=re.DOTALL | re.IGNORECASE
+    )
+    text = " ".join(unescape(TAG_RE.sub(" ", text)).split())
+    match = re.search(r"\bFollowers\s+([\d,]{1,15})", text)
+    if not match:
+        return None
+    try:
+        return int(match.group(1).replace(",", ""))
+    except ValueError:
+        return None
+
+
+def load_export(
     export_path: Path,
-) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
+) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]], dict[str, Any]]:
+    """Read follower/following lists from a JSON export, an HTML export, or both."""
     documents = read_json_files(export_path)
-    if not documents:
+    pages = read_html_files(export_path)
+    if not documents and not pages:
         raise AuditError(
-            "No JSON files were found. Download your Instagram information in JSON "
-            "format (not HTML), then try again."
+            "No follower or following list was found in this export. Download your "
+            "information from Accounts Center with Followers and following selected, "
+            "in JSON format, then try again."
         )
 
     following: dict[str, dict[str, Any]] = {}
     followers: dict[str, dict[str, Any]] = {}
-    kinds_found: set[str] = set()
+    json_kinds: set[str] = set()
+    html_kinds: set[str] = set()
 
     for filename, data in documents:
         filename_kind = kind_from_filename(filename)
@@ -246,21 +375,74 @@ def load_follow_lists(
             if kind not in ("following", "followers"):
                 continue
 
-            kinds_found.add(kind)
+            json_kinds.add(kind)
             target = following if kind == "following" else followers
             for record in records:
                 for username, timestamp in extract_entries(record):
                     remember(target, username, timestamp)
 
-    if "following" not in kinds_found or "followers" not in kinds_found:
-        present = ", ".join(name for name, _ in documents[:12])
-        missing = "following" if "following" not in kinds_found else "followers"
+    for filename, text in pages:
+        kind = kind_from_filename(filename)
+        if kind not in ("following", "followers"):
+            continue
+        html_kinds.add(kind)
+        target = following if kind == "following" else followers
+        for username, timestamp in extract_html_entries(text):
+            remember(target, username, timestamp)
+
+    found = json_kinds | html_kinds
+    if "following" not in found or "followers" not in found:
+        missing = "following" if "following" not in found else "followers"
+        seen = [name for name, _ in documents] + [name for name, _ in pages]
         raise AuditError(
             f"Could not find the {missing} list in the export. Make sure you selected "
-            "both Followers and following in JSON format.\n"
-            f"JSON files seen: {present or 'none'}"
+            "both Followers and following when you requested your information.\n"
+            f"Files seen: {', '.join(seen[:12]) or 'none'}"
         )
 
+    formats: list[str] = []
+    if json_kinds:
+        formats.append("json")
+    if html_kinds:
+        formats.append("html")
+    info: dict[str, Any] = {
+        "format": "mixed" if len(formats) > 1 else formats[0],
+        "truncation": None,
+        "warnings": [],
+    }
+
+    if html_kinds:
+        info["warnings"].append(
+            "This export is HTML. Instagram leaves older entries out of long HTML "
+            "lists, so a follower list can be incomplete even when the file looks "
+            "complete. The JSON export lists every account."
+        )
+
+    reported = parse_reported_follower_count(read_insights_page(export_path) or "")
+    if reported and followers and len(followers) < reported:
+        missing = reported - len(followers)
+        if missing >= max(25, int(reported * 0.02)):
+            info["truncation"] = {
+                "reportedFollowers": reported,
+                "listedFollowers": len(followers),
+                "missing": missing,
+            }
+            info["warnings"].insert(
+                0,
+                f"Instagram reports {reported:,} followers, but this export only "
+                f"lists {len(followers):,} of them, so about {missing:,} are missing. "
+                "Anyone you follow who follows you but is absent from that list will "
+                'show up below as "not following back". Treat this list as a '
+                "superset, or re-download the export in JSON format for an exact answer.",
+            )
+
+    return following, followers, info
+
+
+def load_follow_lists(
+    export_path: Path,
+) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
+    following, followers, _info = load_export(export_path)
     return following, followers
 
 
@@ -270,7 +452,7 @@ def load_follow_lists(
 
 
 def build_payload(export_path: Path) -> dict[str, Any]:
-    following, followers = load_follow_lists(export_path)
+    following, followers, info = load_export(export_path)
 
     not_following_back = [following[key] for key in following if key not in followers]
     fans = [followers[key] for key in followers if key not in following]
@@ -293,6 +475,9 @@ def build_payload(export_path: Path) -> dict[str, Any]:
         "generated": now,
         "source": export_path.name,
         "fingerprint": fingerprint,
+        "format": info["format"],
+        "truncation": info["truncation"],
+        "warnings": info["warnings"],
         "counts": {
             "following": len(following),
             "followers": len(followers),
@@ -404,6 +589,33 @@ HTML_TEMPLATE = r"""<!doctype html>
     margin: 0 auto;
     padding: 62px 0 40px;
   }
+
+  .alert {
+    margin: 26px 0 0;
+    padding: 18px 20px;
+    border-radius: 16px;
+    border: 1px solid rgba(245, 177, 60, .38);
+    background: rgba(245, 177, 60, .08);
+    color: #ffe7bb;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+  }
+
+  .alert h2 {
+    margin: 0 0 8px;
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #f8c96f;
+  }
+
+  .alert ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13.5px;
+    line-height: 1.65;
+  }
+
+  .alert li + li { margin-top: 8px; }
 
   .hero { max-width: 680px; }
 
@@ -985,6 +1197,11 @@ HTML_TEMPLATE = r"""<!doctype html>
     </div>
   </header>
 
+  <section class="alert" id="alert" role="alert" hidden>
+    <h2>Read this before trusting the numbers</h2>
+    <ul id="alert-list"></ul>
+  </section>
+
   <section class="stats" aria-label="Audit summary">
     <div class="stat">
       <span class="stat-label">Following</span>
@@ -1112,6 +1329,17 @@ HTML_TEMPLATE = r"""<!doctype html>
   const profileUrl = (username) => "https://www.instagram.com/" + encodeURIComponent(username) + "/";
   const formatNumber = (value) => Number(value || 0).toLocaleString();
 
+  // A real anchor click is never popup-blocked, unlike window.open() from a file:// page.
+  function openProfile(url) {
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
   function formatDate(timestamp) {
     if (!timestamp) return "";
     try {
@@ -1138,6 +1366,19 @@ HTML_TEMPLATE = r"""<!doctype html>
     } catch (_) {
       $("meta-generated").textContent = "Generated locally";
     }
+  }
+
+  function renderWarnings() {
+    const warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
+    if (!warnings.length) return;
+    const list = $("alert-list");
+    list.replaceChildren();
+    for (const message of warnings) {
+      const item = document.createElement("li");
+      item.textContent = message;
+      list.appendChild(item);
+    }
+    $("alert").hidden = false;
   }
 
   function fillStats() {
@@ -1378,7 +1619,7 @@ HTML_TEMPLATE = r"""<!doctype html>
       toast("Everything in the not-following-back list is checked off.");
       return;
     }
-    window.open(profileUrl(next.username), "_blank", "noopener,noreferrer");
+    openProfile(profileUrl(next.username));
     toast("Opened @" + next.username + ". Unfollow manually, then check it off.");
   });
 
@@ -1407,6 +1648,7 @@ HTML_TEMPLATE = r"""<!doctype html>
   });
 
   metaText();
+  renderWarnings();
   fillStats();
   updateProgress();
   renderList();
@@ -1467,6 +1709,9 @@ def main(argv: list[str] | None = None) -> int:
     except AuditError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
+
+    for warning in payload.get("warnings", []):
+        print(f"Warning: {warning}", file=sys.stderr)
 
     out_path = args.out.expanduser().resolve()
     out_path.parent.mkdir(parents=True, exist_ok=True)
