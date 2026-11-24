@@ -8,7 +8,7 @@ It reads the official **data export** from Instagram (JSON, or HTML in current v
 
 ## Use it in your browser (no install, works on a phone)
 
-### **[sinnerk.github.io/local-instagram-unfollower](https://sinnerk.github.io/local-instagram-unfollower/)**
+### **[sinnerk.github.io/unfollow-checker](https://sinnerk.github.io/unfollow-checker/)**
 
 Drop your export ZIP on the page. The whole comparison runs in the browser tab â€” nothing is uploaded, there is no account and no analytics. It includes:
 
@@ -32,7 +32,7 @@ Drop your export ZIP on the page. The whole comparison runs in the browser tab â
 
 ### 2. Download the app
 
-Open **[Releases](https://github.com/sinnerk/local-instagram-unfollower/releases/latest)** and download **`Local-Instagram-Unfollower.exe`**. Put it anywhere you like, for example your Desktop.
+Open **[Releases](https://github.com/sinnerk/unfollow-checker/releases/latest)** and download **`Local-Instagram-Unfollower.exe`**. Put it anywhere you like, for example your Desktop.
 
 ### 3. Run it
 
@@ -54,7 +54,7 @@ Code-signing certificates cost money and require identity verification, so small
 
 - Every line of source is in this repository under the MIT license.
 - You can run the Python source instead of the EXE.
-- You can verify the download against the SHA-256 published in the [release notes](https://github.com/sinnerk/local-instagram-unfollower/releases/latest):
+- You can verify the download against the SHA-256 published in the [release notes](https://github.com/sinnerk/unfollow-checker/releases/latest):
 
 ```powershell
 Get-FileHash .\Local-Instagram-Unfollower.exe -Algorithm SHA256
@@ -175,7 +175,7 @@ The result is `dist/Local-Instagram-Unfollower.exe`.
 
 ## Open source
 
-This project is **MIT licensed**. Read the code, fork it, or build your own EXE. Issues and pull requests are welcome at [github.com/sinnerk/local-instagram-unfollower](https://github.com/sinnerk/local-instagram-unfollower).
+This project is **MIT licensed**. Read the code, fork it, or build your own EXE. Issues and pull requests are welcome at [github.com/sinnerk/unfollow-checker](https://github.com/sinnerk/unfollow-checker).
 
 ## License
 

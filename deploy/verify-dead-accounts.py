@@ -250,7 +250,7 @@ def main() -> None:
     print(f"written to {OUT}")
 
     fragment = base64.b64encode(json.dumps(payload).encode()).decode()
-    link = "https://sinnerk.github.io/local-instagram-unfollower/app.html#verify=" + fragment
+    link = "https://sinnerk.github.io/unfollow-checker/app.html#verify=" + fragment
     print("\napply it in the browser (the tool restores your last export automatically):")
     print(link)
 

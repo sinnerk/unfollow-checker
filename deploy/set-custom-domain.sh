@@ -7,8 +7,8 @@
 set -uo pipefail
 
 DOMAIN="unfollowchecker.is-a.dev"
-REPO="sinnerk/local-instagram-unfollower"
-PROJECT="/c/Users/sxdem/Documents/Default Project/projects/local-instagram-unfollower"
+REPO="sinnerk/unfollow-checker"
+PROJECT="/c/Users/sxdem/Documents/Default Project/projects/unfollow-checker"
 LOG="/c/Users/sxdem/AppData/Local/hermes/cache/scratch/custom-domain.log"
 
 log() { echo "$(date -u +%FT%TZ) $*" | tee -a "$LOG"; }
