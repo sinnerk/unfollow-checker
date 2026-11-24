@@ -490,3 +490,13 @@ footer.site .footer-grid a:hover { color: var(--text); }
   .tab { min-height: 42px; }
   .avatar { width: 32px; height: 32px; }
 }
+
+/* ---------- verify options ---------- */
+.verify-option {
+  border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px;
+  background: var(--panel-2); margin: 12px 0;
+}
+.vo-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.vo-head h3 { font-size: 15px; margin: 0; letter-spacing: -.01em; }
+.verify-option p { font-size: 14px; color: var(--muted); margin: 0 0 10px; }
+.verify-option .steps { margin: 0; }

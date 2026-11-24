@@ -546,6 +546,107 @@ async function one(u){
 })();})();`;
 }
 
+/* ------------------------------------------------------------------ */
+/* server-side check (works for anyone, no session needed)             */
+/* ------------------------------------------------------------------ */
+
+const API_BASE =
+  new URLSearchParams(location.search).get("api") ||
+  (location.hostname === "127.0.0.1" || location.hostname === "localhost"
+    ? "http://127.0.0.1:8099"
+    : "https://unfollow-checker-api.up.railway.app");
+
+const SERVER_BATCH = 200;
+
+async function checkWithServer() {
+  const accounts = result ? result.notFollowingBack : [];
+  const names = accounts.map((a) => a.username);
+  if (!names.length) {
+    toast("There is nothing to check.");
+    return;
+  }
+
+  const button = $("server-check");
+  const progress = $("server-progress");
+  const bar = $("server-bar");
+  const status = $("server-status");
+  button.disabled = true;
+  progress.hidden = false;
+  bar.style.width = "2%";
+  status.textContent = "Contacting the checker service…";
+
+  // Leave out accounts we already know the answer for.
+  const unknown = names.filter((name) => {
+    const key = name.toLowerCase();
+    return !state.gone.has(key) && !state.alive.has(key);
+  });
+
+  const dead = [];
+  const alive = [];
+  const failed = [];
+  let done = 0;
+  const total = unknown.length;
+
+  try {
+    for (let start = 0; start < unknown.length; start += SERVER_BATCH) {
+      const batch = unknown.slice(start, start + SERVER_BATCH);
+      let response;
+      try {
+        response = await fetch(API_BASE + "/api/check", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ usernames: batch }),
+        });
+      } catch {
+        throw new Error(
+          "Could not reach the checker service. Use Option 2 (the bookmarklet) instead.",
+        );
+      }
+
+      if (response.status === 503) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(
+          body.error === "no_session"
+            ? "The checker service has no Instagram session configured yet. Use Option 2 below — it works today."
+            : "The checker service can't reach Instagram right now. Use Option 2 below.",
+        );
+      }
+      if (response.status === 429) {
+        throw new Error("The checker service is busy (rate limited). Wait a minute, or use Option 2.");
+      }
+      if (!response.ok) {
+        throw new Error("The checker service returned an error (" + response.status + "). Use Option 2.");
+      }
+
+      const body = await response.json();
+      for (const [username, info] of Object.entries(body.results || {})) {
+        if (info.status === "dead") dead.push(username);
+        else if (info.status === "alive") alive.push(username);
+        else failed.push(username);
+      }
+      done += batch.length;
+      bar.style.width = Math.min(96, 4 + (done / Math.max(total, 1)) * 92) + "%";
+      status.textContent =
+        `${done} of ${total} checked — ${dead.length} gone, ${alive.length} exist, ${failed.length} unknown`;
+    }
+
+    bar.style.width = "100%";
+    status.textContent =
+      `Done — ${dead.length} gone, ${alive.length} exist, ${failed.length} unknown.`;
+    if (dead.length || alive.length) {
+      applyVerification({ dead, alive, failed, checked: total, when: Date.now() });
+    } else {
+      toast("The service could not classify anything this time.");
+    }
+  } catch (error) {
+    bar.style.width = "0%";
+    status.textContent = error.message;
+    toast(error.message);
+  } finally {
+    button.disabled = false;
+  }
+}
+
 function renderBookmarklet() {
   const names = result.notFollowingBack.map((a) => a.username);
   if (!names.length) {
@@ -764,6 +865,8 @@ $("apply-verify").addEventListener("click", () => {
   applyVerification(text);
   $("verify-paste").value = "";
 });
+
+$("server-check").addEventListener("click", checkWithServer);
 
 $("clear-dead").addEventListener("click", () => {
   if (!state.gone.size) {

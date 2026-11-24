@@ -53,8 +53,18 @@
       <li>The results are passed back in the URL fragment (<code>#verify=…</code>). Fragments are never sent to a web server — not to this site's host, not to anyone.</li>
     </ul>
 
+    <h2 style="margin-top:18px">The optional server check</h2>
+    <p>There is a second way to find dead accounts, and it is the only part of this site that talks to a server. It is off unless you click it:</p>
+    <ul style="color:var(--muted);padding-left:18px">
+      <li>We send <b>only the Instagram handles</b> from your "doesn't follow back" list — nothing else. No export, no file, no cookie, no account name of yours.</li>
+      <li>The service asks Instagram whether each profile still exists and returns one of three words per handle: exists, gone, unknown.</li>
+      <li>It caches those public answers (handle → exists) for a day so popular accounts aren't re-checked, and it logs aggregate counts only — no IP addresses, no per-visitor records.</li>
+      <li>It cannot see your list beyond the handles in that one request, and it cannot tell who you are.</li>
+    </ul>
+    <p>If you'd rather not use it, the bookmarklet path does the same work inside your own logged-in tab and never contacts this service.</p>
+
     <h2 style="margin-top:18px">Third parties</h2>
-    <p>None. The page loads no fonts, no scripts, no pixels and no CDN files from other domains — the zip reader is bundled with the site, hosted on GitHub Pages.</p>
+    <p>No fonts, no analytics, no ad pixels, no third-party scripts on the page itself — the zip reader is bundled and served from GitHub Pages. The only outbound call the site can make is the handle check described above, and only when you press that button.</p>
 
     <h2 style="margin-top:18px">Links out</h2>
     <p>Opening a profile takes you to instagram.com, where Instagram's own privacy policy applies.</p>

@@ -32,3 +32,17 @@ jobs:
         run: |
           node --check docs/js/app.js
           node --check docs/js/parse.js
+          node --check server/worker.js
+
+  api:
+    name: Checker API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install -r server/requirements.txt pytest
+      - name: Tests
+        run: python -m pytest server -q

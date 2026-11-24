@@ -116,16 +116,45 @@
       <summary>Find dead or deactivated accounts <span class="badge" id="verify-badge">optional</span></summary>
       <p style="margin-top:10px">
         Instagram only answers "does this account still exist?" for a logged-in session — every
-        profile URL returns the same generic page when you are logged out. So this step runs in
-        <b>your own Instagram tab</b>, with your session, and sends the results straight back here.
-        Nothing is uploaded; the site never sees your password or cookies.
+        profile URL returns the same generic page when you are logged out. There are two ways to get
+        that answer below: a shared checker service, or a one-click script that runs in your own tab.
       </p>
-      <ol class="steps" style="margin-top:12px">
-        <li><b>Drag this button</b> to your bookmarks bar (desktop): <br><span id="bookmarklet-slot">loading…</span></li>
-        <li>Open <a href="https://www.instagram.com/" target="_blank" rel="noopener" style="color:var(--text);text-decoration:underline">instagram.com</a> in that same browser and make sure you're logged in.</li>
-        <li>Click the bookmark. A panel appears and checks every account one by one (~1 per second).</li>
-        <li>When it finishes, it copies the results and reopens this page with them filled in.</li>
-      </ol>
+
+      <div class="verify-option">
+        <div class="vo-head">
+          <h3>Option 1 — server check</h3>
+          <span class="badge" id="server-badge">fastest</span>
+        </div>
+        <p>
+          We send <b>only the usernames</b> on this list to a small checker service, which asks
+          Instagram whether each profile still exists. Your export, your account and your session
+          never leave your browser — the service has no idea who you are, and it answers from its
+          own capacity.
+        </p>
+        <button class="btn primary" id="server-check" type="button">Check these accounts</button>
+        <div id="server-progress" hidden>
+          <div class="bar"><div id="server-bar"></div></div>
+          <div style="font-size:13px;color:var(--muted)" id="server-status"></div>
+        </div>
+      </div>
+
+      <div class="verify-option">
+        <div class="vo-head">
+          <h3>Option 2 — run it yourself</h3>
+          <span class="badge">always works</span>
+        </div>
+        <p>
+          This runs in your own Instagram tab with your own session. Slower to set up, but it never
+          depends on our service and it works even if you're rate-limited elsewhere.
+        </p>
+        <ol class="steps" style="margin-top:12px">
+          <li><b>Drag this button</b> to your bookmarks bar (desktop): <br><span id="bookmarklet-slot">loading…</span></li>
+          <li>Open <a href="https://www.instagram.com/" target="_blank" rel="noopener" style="color:var(--text);text-decoration:underline">instagram.com</a> in that same browser and make sure you're logged in.</li>
+          <li>Click the bookmark. A panel appears and checks every account one by one (~1 per second).</li>
+          <li>When it finishes, it copies the results and reopens this page with them filled in.</li>
+        </ol>
+      </div>
+
       <p style="margin:12px 0 8px">Got the results as text? Paste them here:</p>
       <textarea id="verify-paste" placeholder='{"dead":["username1","username2"]}'></textarea>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">

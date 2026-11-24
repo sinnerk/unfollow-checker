@@ -1,0 +1,12 @@
+name = "unfollow-checker-api"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+
+# Created with: npx wrangler kv namespace create CACHE
+# Leave commented out to run without a cache (slower, more requests to Instagram).
+# [[kv_namespaces]]
+# binding = "CACHE"
+# id = "<paste the id wrangler prints>"
+
+[observability]
+enabled = true

@@ -191,6 +191,7 @@ def main() -> None:
     parser.add_argument("export", help="path to the Instagram export .zip")
     parser.add_argument("--wait", type=int, default=900, help="seconds to wait for Brave to close")
     parser.add_argument("--limit", type=int, default=0, help="only check the first N accounts")
+    parser.add_argument("--no-open", action="store_true", help="do not open the results page")
     args = parser.parse_args()
 
     accounts = not_following_back(Path(args.export))
@@ -249,12 +250,20 @@ def main() -> None:
     print(f"written to {OUT}")
 
     fragment = base64.b64encode(json.dumps(payload).encode()).decode()
-    print("\napply it in the browser (open while the tool tab has your export):")
-    print(f"https://sinnerk.github.io/local-instagram-unfollower/app.html#verify={fragment}")
+    link = "https://sinnerk.github.io/local-instagram-unfollower/app.html#verify=" + fragment
+    print("\napply it in the browser (the tool restores your last export automatically):")
+    print(link)
 
     if BRAVE_EXE.exists():
         subprocess.Popen([str(BRAVE_EXE), "--restore-last-session"], close_fds=True)
         print("Brave reopened.")
+        time.sleep(6)
+    if not args.no_open:
+        try:
+            os.startfile(link)  # noqa: S606 — opens the results in the default browser
+            print("Opened the results page.")
+        except Exception as error:
+            print(f"Could not open the browser ({error}) — paste the link above.")
 
 
 if __name__ == "__main__":
