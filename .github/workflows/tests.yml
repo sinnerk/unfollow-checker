@@ -1,0 +1,34 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  cli:
+    name: Python CLI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+
+  web:
+    name: Web parser
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Parser tests
+        run: node --test tests/web/parse.test.mjs
+      - name: Syntax check site scripts
+        run: |
+          node --check docs/js/app.js
+          node --check docs/js/parse.js
