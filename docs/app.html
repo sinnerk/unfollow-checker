@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Open the tool — Unfollow Checker</title>
+<meta name="description" content="Drop your Instagram export and get the exact list of accounts that don't follow you back. Everything runs in your browser.">
+<meta name="theme-color" content="#0b0b10">
+<link rel="icon" href="assets/icon.png">
+<link rel="apple-touch-icon" href="assets/icon.png">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="./">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" stroke="url(#g)" stroke-width="2"/>
+        <circle cx="12" cy="12" r="4.2" stroke="url(#g)" stroke-width="2"/>
+        <circle cx="17.4" cy="6.6" r="1.3" fill="#e1306c"/>
+        <defs><linearGradient id="g" x1="0" y1="0" x2="24" y2="24">
+          <stop stop-color="#f77737"/><stop offset=".5" stop-color="#e1306c"/><stop offset="1" stop-color="#833ab4"/>
+        </linearGradient></defs>
+      </svg>
+      Unfollow Checker
+    </a>
+    <nav>
+      <a href="./">Home</a>
+      <a href="tutorials.html">Tutorials</a>
+      <a href="privacy.html" class="opt">Privacy</a>
+      <a href="https://github.com/sinnerk/local-instagram-unfollower" class="opt" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ---------------- import ---------------- -->
+  <section id="screen-import">
+    <div class="hero" style="padding-top:26px">
+      <h1>Drop your export. Get the list.</h1>
+      <p>Your ZIP is read inside this tab — it is never uploaded. If you don't have the file yet, <a href="tutorials.html#download" style="color:var(--text);text-decoration:underline">get your export in 2 minutes</a>.</p>
+    </div>
+
+    <div class="drop" id="drop" role="button" tabindex="0" aria-label="Choose your Instagram export ZIP file">
+      <div class="drop-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>
+        </svg>
+      </div>
+      <div class="big">Drop your export .zip here</div>
+      <div class="small">or tap to choose a file — JSON export recommended, HTML also supported</div>
+      <input type="file" id="file" accept=".zip,application/zip,.json" multiple>
+    </div>
+
+    <div class="pillbar">
+      <span class="pill">🔒 <b>100% local</b> — no upload, no server</span>
+      <span class="pill">⚡ Parse in seconds</span>
+      <span class="pill">📱 Works on phone</span>
+      <span class="pill">🧾 Exact counts, verified</span>
+    </div>
+
+    <div id="import-status" class="panel" hidden>
+      <div id="status-text">Reading export…</div>
+      <div class="bar"><div id="status-bar"></div></div>
+      <div style="font-size:13px;color:var(--muted)" id="status-sub"></div>
+    </div>
+
+    <div id="import-error" class="alert" hidden></div>
+  </section>
+
+  <!-- ---------------- results ---------------- -->
+  <section id="screen-result" hidden>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:18px 0 0">
+      <div style="font-weight:650;font-size:16px" id="source-name">Export</div>
+      <button class="btn small ghost" id="new-export" type="button">Load a different export</button>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div id="warn-box" class="alert" hidden></div>
+
+    <div class="toolbar">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="search" type="search" placeholder="Search username" autocomplete="off" aria-label="Search username">
+      </div>
+      <button class="btn primary" id="open-next" type="button">Open next &amp; check off ↗</button>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-view="notFollowingBack" aria-selected="true">Doesn't follow back <span class="count" data-count="notFollowingBack">0</span></button>
+      <button class="tab" role="tab" data-view="fans" aria-selected="false">Follows you only <span class="count" data-count="fans">0</span></button>
+      <button class="tab" role="tab" data-view="mutual" aria-selected="false">Mutual <span class="count" data-count="mutual">0</span></button>
+    </div>
+
+    <div class="toolbar">
+      <label class="btn small ghost" style="cursor:pointer">
+        <input type="checkbox" id="hide-checked" style="margin:0"> Hide checked
+      </label>
+      <label class="btn small ghost" style="cursor:pointer">
+        <input type="checkbox" id="hide-gone" style="margin:0"> Hide gone accounts
+      </label>
+      <span style="font-size:13px;color:var(--muted)" id="progress-text"></span>
+      <span class="grow"></span>
+      <button class="btn small" id="copy-list" type="button">Copy usernames</button>
+      <button class="btn small" id="download-csv" type="button">CSV</button>
+      <button class="btn small danger" id="reset-progress" type="button">Reset</button>
+    </div>
+
+    <div class="list" id="list" role="tabpanel" aria-live="polite"></div>
+
+    <details class="panel" id="verify-panel">
+      <summary>Find dead or deactivated accounts <span class="badge" id="verify-badge">optional</span></summary>
+      <p style="margin-top:10px">
+        Instagram only answers "does this account still exist?" for a logged-in session — every
+        profile URL returns the same generic page when you are logged out. So this step runs in
+        <b>your own Instagram tab</b>, with your session, and sends the results straight back here.
+        Nothing is uploaded; the site never sees your password or cookies.
+      </p>
+      <ol class="steps" style="margin-top:12px">
+        <li><b>Drag this button</b> to your bookmarks bar (desktop): <br><span id="bookmarklet-slot">loading…</span></li>
+        <li>Open <a href="https://www.instagram.com/" target="_blank" rel="noopener" style="color:var(--text);text-decoration:underline">instagram.com</a> in that same browser and make sure you're logged in.</li>
+        <li>Click the bookmark. A panel appears and checks every account one by one (~1 per second).</li>
+        <li>When it finishes, it copies the results and reopens this page with them filled in.</li>
+      </ol>
+      <p style="margin:12px 0 8px">Got the results as text? Paste them here:</p>
+      <textarea id="verify-paste" placeholder='{"dead":["username1","username2"]}'></textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn primary" id="apply-verify" type="button">Apply results</button>
+        <button class="btn ghost" id="clear-dead" type="button">Clear gone marks</button>
+      </div>
+      <p style="margin:12px 0 0;font-size:13px">
+        On a phone bookmarklets don't work — use the <b>mark as gone</b> button on any row after
+        opening a profile and seeing "Sorry, this page isn't available".
+      </p>
+    </details>
+
+    <details class="panel" id="integrity-panel">
+      <summary>Export integrity <span class="badge" id="integrity-badge">checking</span></summary>
+      <div id="integrity-body"></div>
+    </details>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>Unfollow Checker — free, open source, local-first.</span>
+    <a href="./">Home</a>
+    <a href="tutorials.html">Tutorials</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="https://github.com/sinnerk/local-instagram-unfollower" rel="noopener">Source</a>
+  </div>
+</footer>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="vendor/jszip.min.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -4,11 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Unfollow Checker — who doesn't follow you back on Instagram</title>
-<meta name="description" content="See who doesn't follow you back on Instagram. Free, no login, no scraping: your export is read inside your own browser and never uploaded.">
+<meta name="description" content="Free tool that shows who doesn't follow you back on Instagram. Reads your own data export inside your browser: no login, no scraping, nothing uploaded.">
 <meta name="theme-color" content="#0b0b10">
-<meta property="og:title" content="Unfollow Checker">
-<meta property="og:description" content="See who doesn't follow you back. Runs entirely in your browser — nothing is uploaded.">
+<meta property="og:title" content="Unfollow Checker — who doesn't follow you back">
+<meta property="og:description" content="Drop your Instagram export, get the exact list. Runs entirely in your browser — no login, no upload.">
 <meta property="og:type" content="website">
+<meta property="og:image" content="assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="assets/og.png">
 <link rel="icon" href="assets/icon.png">
 <link rel="apple-touch-icon" href="assets/icon.png">
 <link rel="stylesheet" href="assets/site.css">
@@ -29,160 +32,222 @@
       Unfollow Checker
     </a>
     <nav>
+      <a href="#features" class="opt">Features</a>
       <a href="tutorials.html">Tutorials</a>
-      <a href="#how" class="opt">How it works</a>
-      <a href="https://github.com/sinnerk/local-instagram-unfollower" class="opt" rel="noopener">GitHub</a>
+      <a href="privacy.html" class="opt">Privacy</a>
+      <a class="nav-cta" href="app.html">Open the tool</a>
     </nav>
   </div>
 </header>
 
-<main class="wrap">
+<main>
 
-  <!-- ---------------- import ---------------- -->
-  <section id="screen-import">
-    <div class="hero">
-      <h1>Who doesn't follow you back?</h1>
-      <p>Drop your Instagram data export and get an exact list in seconds. Your file is read inside this browser tab — it is never uploaded, and there is no login.</p>
+  <!-- ---------------- hero ---------------- -->
+  <section class="wrap hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow">Free · open source · no login</span>
+      <h1>See exactly who doesn't follow you back.</h1>
+      <p class="lede">
+        Drop your Instagram data export and get the real list in seconds — plus the fans you never
+        followed back, and the dead accounts still sitting in your following. Everything is computed
+        inside your own browser tab.
+      </p>
+      <div class="cta-row">
+        <a class="btn primary" href="app.html">Open the tool →</a>
+        <a class="btn ghost" href="tutorials.html#download">Get your export (2 min)</a>
+      </div>
+      <ul class="checks">
+        <li>No password, no scraping, no automation</li>
+        <li>Your ZIP never leaves your device</li>
+        <li>Works on a phone, and it's free forever</li>
+      </ul>
+    </div>
+
+    <div class="hero-art" aria-hidden="true">
+      <div class="mockup">
+        <div class="mock-head">
+          <div class="mock-title">instagram-sfgo-2026-11-23.zip</div>
+          <div class="mock-pills">
+            <span>1,206 following</span><span>2,472 followers</span><span class="hot">317 don't follow back</span>
+          </div>
+        </div>
+        <div class="mock-row done">
+          <span class="mock-check">✓</span>
+          <span class="mock-av" style="--h:250">A</span>
+          <span class="mock-name">@aftermyregret</span>
+          <span class="mock-tag">checked</span>
+        </div>
+        <div class="mock-row">
+          <span class="mock-check"></span>
+          <span class="mock-av" style="--h:320">M</span>
+          <span class="mock-name">@miracleluvesu</span>
+          <span class="mock-date">Oct 16, 2026</span>
+        </div>
+        <div class="mock-row">
+          <span class="mock-check"></span>
+          <span class="mock-av" style="--h:20">C</span>
+          <span class="mock-name">@catpursmeow</span>
+          <span class="mock-date">Nov 2, 2026</span>
+        </div>
+        <div class="mock-row">
+          <span class="mock-check"></span>
+          <span class="mock-av" style="--h:280">G</span>
+          <span class="mock-name">@ghost_account</span>
+          <span class="mock-tag gone">gone</span>
+        </div>
+        <div class="mock-row done">
+          <span class="mock-check">✓</span>
+          <span class="mock-av" style="--h:150">I</span>
+          <span class="mock-name">@iv55sa</span>
+          <span class="mock-tag">checked</span>
+        </div>
+        <div class="mock-foot">checked 2 of 317 · nothing uploaded</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------- trust strip ---------------- -->
+  <div class="wrap">
+    <div class="trust">
+      <div><b>0</b><span>files uploaded</span></div>
+      <div><b>0</b><span>passwords asked</span></div>
+      <div><b>~5s</b><span>for 450 MB of export</span></div>
+      <div><b>MIT</b><span>licensed source</span></div>
+    </div>
+  </div>
+
+  <!-- ---------------- features ---------------- -->
+  <section class="wrap section" id="features">
+    <h2 class="section-title">Everything you need to clean up your following</h2>
+    <p class="section-sub">Not a screenshot of the maths — the actual lists, with the boring edge cases handled.</p>
+
+    <div class="feature-grid">
+      <article class="feature">
+        <div class="ficon">⚖️</div>
+        <h3>Exact counts</h3>
+        <p>Following, followers, mutual, fans and not-following-back, reconciled on casefolded handles with duplicate rows dropped. Split files, HTML exports and old <code>/_u/</code> links all parse.</p>
+      </article>
+      <article class="feature">
+        <div class="ficon">🧾</div>
+        <h3>Export integrity panel</h3>
+        <p>See exactly which files were read, how many rows each held, how many duplicates were dropped, and whether Instagram's own insights page disagrees with your follower list.</p>
+      </article>
+      <article class="feature">
+        <div class="ficon">✅</div>
+        <h3>Open next &amp; check off</h3>
+        <p>One button opens the next unchecked profile in a new tab and records it, so you never lose your place. Progress is saved per export, not globally.</p>
+      </article>
+      <article class="feature">
+        <div class="ficon">🪦</div>
+        <h3>Dead-account finder</h3>
+        <p>Instagram hides deleted and deactivated accounts in plain sight. Run the optional one-click check inside your own logged-in tab and they get flagged.</p>
+      </article>
+      <article class="feature">
+        <div class="ficon">📤</div>
+        <h3>Take the list with you</h3>
+        <p>Search, filter, copy the usernames, or download a CSV that includes follow dates and verification status. No account needed to export.</p>
+      </article>
+      <article class="feature">
+        <div class="ficon">🔒</div>
+        <h3>Truly local</h3>
+        <p>No backend, no analytics, no third-party scripts. The zip reader is bundled with the page, so the site works with your network switched off.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ---------------- steps ---------------- -->
+  <section class="wrap section">
+    <h2 class="section-title">Three steps</h2>
+    <div class="step-grid">
+      <div class="step">
+        <span class="num-pill">1</span>
+        <h3>Download your export</h3>
+        <p>Accounts Center → Your information and permissions → Download your information. Pick JSON and tick only <b>Followers and following</b> so the file stays small.</p>
+        <a href="tutorials.html#download">Walkthrough →</a>
+      </div>
+      <div class="step">
+        <span class="num-pill">2</span>
+        <h3>Drop the ZIP</h3>
+        <p>The page reads it in memory and compares both lists locally. A 450 MB export takes about five seconds; nothing is transmitted anywhere.</p>
+        <a href="app.html">Open the tool →</a>
+      </div>
+      <div class="step">
+        <span class="num-pill">3</span>
+        <h3>Work the list</h3>
+        <p>Hit <b>Open next &amp; check off</b> and go down the list. Mark dead accounts as gone. Come back any time — your progress is remembered.</p>
+        <a href="tutorials.html#clean">How the cleanup loop works →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------- faq ---------------- -->
+  <section class="wrap section">
+    <h2 class="section-title">Questions people actually ask</h2>
+    <div class="faq">
+      <details>
+        <summary>Is this allowed? Will Instagram ban me?</summary>
+        <p>You're reading a file Instagram gave you. There is no automation, no scraping and no login, so there is nothing for them to act on. The tool never unfollows for you — you click unfollow yourself.</p>
+      </details>
+      <details>
+        <summary>Why doesn't it unfollow people automatically?</summary>
+        <p>Instagram has no public unfollow API, and any site offering mass-unfollow is either running your password through a scraper or breaking the terms. The safe loop is: open profile → tap Unfollow → come back → next.</p>
+      </details>
+      <details>
+        <summary>My export is HTML. Does it still work?</summary>
+        <p>Yes, but HTML exports silently drop older rows from long lists, which can make real followers look like non-followers. The integrity panel flags it. Re-download in JSON for an exact answer.</p>
+      </details>
+      <details>
+        <summary>Someone shows up as not following back, but I'm sure they do.</summary>
+        <p>Three honest reasons: the export is a snapshot (a day or two old on big accounts), it's an HTML export, or the two lists were captured at different moments. Nothing is wrong with the maths in those cases — see <a href="tutorials.html#trouble">troubleshooting</a>.</p>
+      </details>
+      <details>
+        <summary>How does it find deleted accounts?</summary>
+        <p>Instagram only answers "does this profile exist?" for a logged-in visitor, so the check runs as a bookmarklet inside your own Instagram tab, read-only, about one request per second. Results come back to this page. It refuses to run without a valid session and marks nothing if it can't verify.</p>
+      </details>
+      <details>
+        <summary>Where is my data stored?</summary>
+        <p>In this browser's local storage: your check-offs and gone marks, keyed to that specific export. Nothing is synced, and "Reset" clears it. <a href="privacy.html">Full privacy notes →</a></p>
+      </details>
+    </div>
+  </section>
+
+  <!-- ---------------- cta ---------------- -->
+  <section class="wrap section">
+    <div class="cta-band">
       <div>
-        <span class="pill">🔒 <b>100% local</b> — no upload, no server</span>
-        <span class="pill">📱 Works on phone</span>
+        <h2>Ready when you are.</h2>
+        <p>Free, no account, works on your phone. About five seconds from ZIP to list.</p>
       </div>
-    </div>
-
-    <div class="drop" id="drop" role="button" tabindex="0" aria-label="Choose your Instagram export ZIP file">
-      <div class="big">Drop your export .zip here</div>
-      <div class="small">or tap to choose a file — JSON export recommended</div>
-      <input type="file" id="file" accept=".zip,application/zip,.json" multiple>
-    </div>
-
-    <p style="text-align:center;color:var(--muted);font-size:13.5px;margin:10px 0 0">
-      Don't have it yet? <a href="tutorials.html#download" style="color:var(--text);text-decoration:underline">Get your export in 2 minutes →</a>
-    </p>
-
-    <div id="import-status" class="panel" hidden>
-      <div id="status-text">Reading export…</div>
-      <div class="bar"><div id="status-bar"></div></div>
-      <div style="font-size:13px;color:var(--muted)" id="status-sub"></div>
-    </div>
-
-    <div id="import-error" class="alert" hidden></div>
-  </section>
-
-  <!-- ---------------- results ---------------- -->
-  <section id="screen-result" hidden>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:18px 0 0">
-      <div style="font-weight:650;font-size:16px" id="source-name">Export</div>
-      <button class="btn small ghost" id="new-export" type="button">Load a different export</button>
-    </div>
-
-    <div class="stats" id="stats"></div>
-
-    <div id="warn-box" class="alert" hidden></div>
-
-    <div class="toolbar">
-      <div class="search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="search" type="search" placeholder="Search username" autocomplete="off" aria-label="Search username">
-      </div>
-      <button class="btn primary" id="open-next" type="button">Open next &amp; check off ↗</button>
-    </div>
-
-    <div class="tabs" role="tablist">
-      <button class="tab" role="tab" data-view="notFollowingBack" aria-selected="true">Doesn't follow back <span class="count" data-count="notFollowingBack">0</span></button>
-      <button class="tab" role="tab" data-view="fans" aria-selected="false">Follows you only <span class="count" data-count="fans">0</span></button>
-      <button class="tab" role="tab" data-view="mutual" aria-selected="false">Mutual <span class="count" data-count="mutual">0</span></button>
-    </div>
-
-    <div class="toolbar">
-      <label class="btn small ghost" style="cursor:pointer">
-        <input type="checkbox" id="hide-checked" style="margin:0"> Hide checked
-      </label>
-      <label class="btn small ghost" style="cursor:pointer">
-        <input type="checkbox" id="hide-gone" style="margin:0"> Hide gone accounts
-      </label>
-      <span style="font-size:13px;color:var(--muted)" id="progress-text"></span>
-      <span class="grow"></span>
-      <button class="btn small" id="copy-list" type="button">Copy usernames</button>
-      <button class="btn small" id="download-csv" type="button">CSV</button>
-      <button class="btn small danger" id="reset-progress" type="button">Reset</button>
-    </div>
-
-    <div class="list" id="list" role="tabpanel" aria-live="polite"></div>
-
-    <details class="panel" id="verify-panel">
-      <summary>Find dead or deactivated accounts <span class="badge" id="verify-badge">optional</span></summary>
-      <p style="margin-top:10px">
-        Instagram only answers "does this account still exist?" for a logged-in session — every
-        profile URL returns the same generic page when you are logged out. So this step runs in
-        <b>your own Instagram tab</b>, with your session, and sends the results straight back here.
-        Nothing is uploaded; the site never sees your password or cookies.
-      </p>
-      <ol class="steps" style="margin-top:12px">
-        <li><b>Drag this button</b> to your bookmarks bar (desktop): <br><span id="bookmarklet-slot">loading…</span></li>
-        <li>Open <a href="https://www.instagram.com/" target="_blank" rel="noopener" style="color:var(--text);text-decoration:underline">instagram.com</a> in that same browser and make sure you're logged in.</li>
-        <li>Click the bookmark. A panel appears and checks every account one by one (~1 per second).</li>
-        <li>When it finishes, it copies the results and reopens this page with them filled in.</li>
-      </ol>
-      <p style="margin:12px 0 8px">Got the results as text? Paste them here:</p>
-      <textarea id="verify-paste" placeholder='{"dead":["username1","username2"]}'></textarea>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-        <button class="btn primary" id="apply-verify" type="button">Apply results</button>
-        <button class="btn ghost" id="clear-dead" type="button">Clear gone marks</button>
-      </div>
-      <p style="margin:12px 0 0;font-size:13px">
-        On a phone bookmarklets don't work — use the <b>mark as gone</b> button on any row after
-        opening a profile and seeing "Sorry, this page isn't available".
-      </p>
-    </details>
-
-    <details class="panel" id="integrity-panel">
-      <summary>Export integrity <span class="badge" id="integrity-badge">checking</span></summary>
-      <div id="integrity-body"></div>
-    </details>
-  </section>
-
-  <!-- ---------------- how it works ---------------- -->
-  <section id="how" style="margin-top:26px">
-    <div class="panel">
-      <h2>How it works</h2>
-      <p>
-        Instagram lets you download everything it knows about your account, including
-        <code>followers_1.json</code> and <code>following.json</code>. This page parses those two
-        lists directly and compares them. No scraping, no automation, no password, and no request
-        leaves your device.
-      </p>
-      <table class="mini">
-        <thead><tr><th>List</th><th class="num">Meaning</th></tr></thead>
-        <tbody>
-          <tr><td>Following</td><td class="num">accounts you follow</td></tr>
-          <tr><td>Followers</td><td class="num">accounts that follow you</td></tr>
-          <tr><td>Doesn't follow back</td><td class="num">you follow, they don't</td></tr>
-          <tr><td>Follows you only</td><td class="num">they follow, you don't</td></tr>
-          <tr><td>Mutual</td><td class="num">both</td></tr>
-        </tbody>
-      </table>
-      <p style="margin-top:12px">
-        Counts describe the moment Instagram captured the export — that can be a day or two old,
-        because big accounts take a while to generate.
-      </p>
+      <a class="btn primary" href="app.html">Open the tool →</a>
     </div>
   </section>
 
 </main>
 
 <footer class="site">
-  <div class="wrap">
-    <span>Unfollow Checker — free, open source, local-first.</span>
-    <a href="tutorials.html">Tutorials</a>
-    <a href="privacy.html">Privacy</a>
-    <a href="https://github.com/sinnerk/local-instagram-unfollower" rel="noopener">Source</a>
-    <a href="https://github.com/sinnerk/local-instagram-unfollower/releases/latest" rel="noopener">Desktop app</a>
+  <div class="wrap footer-grid">
+    <div>
+      <div class="brand" style="margin-bottom:8px">Unfollow Checker</div>
+      <p style="color:var(--muted);font-size:13.5px;margin:0">
+        A local-first tool for auditing your Instagram following. Free and open source under MIT.
+      </p>
+    </div>
+    <div>
+      <h4>Product</h4>
+      <a href="app.html">Open the tool</a>
+      <a href="tutorials.html">Tutorials</a>
+      <a href="tutorials.html#trouble">Troubleshooting</a>
+    </div>
+    <div>
+      <h4>Project</h4>
+      <a href="privacy.html">Privacy</a>
+      <a href="https://github.com/sinnerk/local-instagram-unfollower" rel="noopener">Source code</a>
+      <a href="https://github.com/sinnerk/local-instagram-unfollower/releases/latest" rel="noopener">Windows app</a>
+    </div>
+  </div>
+  <div class="wrap" style="margin-top:18px;font-size:12.5px;color:var(--muted-2)">
+    Not affiliated with Instagram or Meta. Your export stays on your device.
   </div>
 </footer>
-
-<div id="toast" role="status" aria-live="polite"></div>
-
-<script src="vendor/jszip.min.js"></script>
-<script type="module" src="js/app.js"></script>
 </body>
 </html>
