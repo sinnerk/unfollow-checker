@@ -352,6 +352,7 @@ function renderIntegrity() {
 }
 
 function currentList() {
+  if (!result) return [];
   return result[activeView] || [];
 }
 
@@ -369,6 +370,7 @@ function filteredList() {
 }
 
 function updateProgress() {
+  if (!result) return;
   const total = currentList().length;
   const checked = currentList().filter((a) => state.handled.has(keyOf(a))).length;
   $("progress-text").textContent = total
@@ -383,6 +385,7 @@ function updateProgress() {
 }
 
 function renderList() {
+  if (!result) return;
   const list = $("list");
   const all = filteredList();
   const slice = all.slice(0, shown);
@@ -800,6 +803,7 @@ drop.addEventListener("drop", (event) => {
 
 $("search").addEventListener("input", (event) => {
   query = event.target.value.trim();
+  if (!result) return;
   shown = PAGE_SIZE;
   renderList();
 });
@@ -808,6 +812,7 @@ $("hide-gone").addEventListener("change", () => { shown = PAGE_SIZE; renderList(
 
 document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => {
+    if (!result) return;
     activeView = tab.dataset.view;
     shown = PAGE_SIZE;
     document.querySelectorAll(".tab").forEach((other) => {
@@ -818,6 +823,7 @@ document.querySelectorAll(".tab").forEach((tab) => {
 });
 
 $("open-next").addEventListener("click", () => {
+  if (!result) { toast("Import an export first."); return; }
   const pool = filteredList().length ? filteredList() : currentList();
   const next = pool.find((account) => !state.handled.has(keyOf(account)))
     || currentList().find((account) => !state.handled.has(keyOf(account)));
@@ -833,6 +839,7 @@ $("open-next").addEventListener("click", () => {
 });
 
 $("copy-list").addEventListener("click", async () => {
+  if (!result) { toast("Import an export first."); return; }
   const names = filteredList().map((account) => account.username);
   if (!names.length) {
     toast("Nothing to copy.");
@@ -842,7 +849,10 @@ $("copy-list").addEventListener("click", async () => {
   toast(ok ? `Copied ${fmt(names.length)} usernames.` : "Could not copy — use the CSV instead.");
 });
 
-$("download-csv").addEventListener("click", downloadCsv);
+$("download-csv").addEventListener("click", () => {
+  if (!result) { toast("Import an export first."); return; }
+  downloadCsv();
+});
 
 $("reset-progress").addEventListener("click", () => {
   if (!state.handled.size) {
