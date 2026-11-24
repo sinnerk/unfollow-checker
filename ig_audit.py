@@ -1208,7 +1208,7 @@ HTML_TEMPLATE = r"""<!doctype html>
       <span class="stat-value" id="stat-following">0</span>
     </div>
     <div class="stat">
-      <span class="stat-label">Followers</span>
+      <span class="stat-label" id="label-followers">Followers</span>
       <span class="stat-value" id="stat-followers">0</span>
     </div>
     <div class="stat accent">
@@ -1384,6 +1384,10 @@ HTML_TEMPLATE = r"""<!doctype html>
   function fillStats() {
     $("stat-following").textContent = formatNumber(payload.counts.following);
     $("stat-followers").textContent = formatNumber(payload.counts.followers);
+    if (payload.truncation) {
+      $("label-followers").textContent = "Followers in export";
+      $("label-followers").title = "Instagram reports " + formatNumber(payload.truncation.reportedFollowers) + " followers";
+    }
     $("stat-not-following").textContent = formatNumber(payload.counts.notFollowingBack);
     $("stat-fans").textContent = formatNumber(payload.counts.fans);
     $("tab-not-following").textContent = formatNumber(payload.counts.notFollowingBack);
