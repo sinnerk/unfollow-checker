@@ -126,7 +126,7 @@ Python is probably not installed or is not on `PATH`. Install Python 3.9+ and ti
 Click **Pick ZIP file** and choose the ZIP manually. Make sure it is the Instagram export, not the email attachment or an unrelated ZIP.
 
 **The counts look wrong**  
-Use the **JSON** format. Instagram truncates long lists in the HTML export — if the file was generated in HTML, the follower list can be missing hundreds of accounts, and anyone you follow who is missing from it is reported as not following back. The app compares the listed followers against Instagram's own total (from the export's insights page) and warns you when that happens. Instagram may also split large follower lists into `followers_1.json`, `followers_2.json`, and so on; keep the whole ZIP together so all chunks are read.
+Use the **JSON** format. A JSON export always contains the complete follower and following lists, even if you picked a date range — the range does not filter these two lists. Instagram truncates long lists in the **HTML** export, and if the file was HTML, the follower list can be missing hundreds of accounts; anyone you follow who is missing from it is reported as not following back. The app compares the listed followers against Instagram's own total (from the export's insights page) and warns you when that happens. Instagram may also split large follower lists into `followers_1.json`, `followers_2.json`, and so on; keep the whole ZIP together so all chunks are read.
 
 **"Could not find the following list"**  
 The export was probably generated without **Followers and following** selected. Request a new export and include that category.
