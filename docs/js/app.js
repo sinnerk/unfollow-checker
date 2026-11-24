@@ -205,10 +205,15 @@ async function present(parsed) {
   activeView = "notFollowingBack";
   query = "";
   $("search").value = "";
+  persistResult();
+  renderResultScreen();
+  applyPendingVerification();
+}
 
+function renderResultScreen() {
   $("screen-import").hidden = true;
   $("screen-result").hidden = false;
-  $("source-name").textContent = parsed.sourceName || "Export";
+  $("source-name").textContent = result.sourceName || "Export";
   window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
 
   renderStats();
@@ -219,6 +224,46 @@ async function present(parsed) {
     tab.setAttribute("aria-selected", String(tab.dataset.view === activeView));
   });
   renderList();
+}
+
+/* ---- remember the last export so a link back to the site restores it ---- */
+
+const LAST_KEY = "uc.last.v1";
+const PENDING_KEY = "uc.pendingVerify.v1";
+
+function persistResult() {
+  if (!result) return;
+  try {
+    localStorage.setItem(LAST_KEY, JSON.stringify({
+      sourceName: result.sourceName,
+      fingerprint,
+      stats: result.stats,
+      info: result.info,
+      notFollowingBack: result.notFollowingBack,
+      fans: result.fans,
+      mutual: result.mutual,
+    }));
+  } catch {
+    // Too big for localStorage (very large accounts): the session still works,
+    // the page just will not auto-restore on the next visit.
+  }
+}
+
+async function restoreLast() {
+  let saved;
+  try {
+    saved = JSON.parse(localStorage.getItem(LAST_KEY) || "null");
+  } catch { return false; }
+  if (!saved || !saved.stats) return false;
+  result = saved;
+  fingerprint = saved.fingerprint || (await fingerprintOf([], saved));
+  state = loadState(fingerprint);
+  shown = PAGE_SIZE;
+  activeView = "notFollowingBack";
+  query = "";
+  $("search").value = "";
+  renderResultScreen();
+  return true;
 }
 
 /* ------------------------------------------------------------------ */
@@ -449,20 +494,23 @@ function buildVerifierScript(usernames, returnUrl) {
   return `(function(){
 var L=${payload},R=${JSON.stringify(returnUrl)},A='936619743392459',i=0,dead=[],alive=[],fail=[];
 var csrf=(document.cookie.match(/csrftoken=([^;]+)/)||[])[1]||'';
-function ui(){var d=document.createElement('div');d.id='uc-panel';d.style.cssText='position:fixed;z-index:2147483647;left:12px;right:12px;bottom:12px;background:#14141f;color:#f2f2f7;border:1px solid #33334a;border-radius:14px;padding:14px 16px;font:14px -apple-system,Segoe UI,Roboto,sans-serif;box-shadow:0 12px 32px rgba(0,0,0,.5)';
-d.innerHTML='<b>Unfollow Checker — checking accounts</b><div id="uc-m" style="color:#9c9cb0;margin-top:6px">starting…</div><div style="height:6px;background:#22222f;border-radius:99px;overflow:hidden;margin:10px 0"><div id="uc-b" style="height:100%;width:0;background:linear-gradient(90deg,#e1306c,#833ab4)"></div></div><div id="uc-t" style="color:#9c9cb0;font-size:12px"></div>';document.body.appendChild(d);}
-function up(m,n,t){var x=document.getElementById('uc-m'),b=document.getElementById('uc-b'),y=document.getElementById('uc-t');if(x)x.textContent=m;if(b)b.style.width=Math.round(i/n*100)+'%';if(y)y.textContent=t||'';}
+function ui(){var o=document.getElementById('uc-panel');if(o)o.remove();var d=document.createElement('div');d.id='uc-panel';d.style.cssText='position:fixed;z-index:2147483647;left:12px;right:12px;bottom:12px;background:#14141f;color:#f2f2f7;border:1px solid #33334a;border-radius:14px;padding:14px 16px;font:14px -apple-system,Segoe UI,Roboto,sans-serif;box-shadow:0 12px 32px rgba(0,0,0,.5)';
+d.innerHTML='<b>Unfollow Checker — checking accounts</b><div id="uc-m" style="color:#9c9cb0;margin-top:6px">starting…</div><div style="height:6px;background:#22222f;border-radius:99px;overflow:hidden;margin:10px 0"><div id="uc-b" style="height:100%;width:0;background:linear-gradient(90deg,#e1306c,#833ab4)"></div></div><div id="uc-t" style="color:#9c9cb0;font-size:12px"></div><div style="margin-top:10px"><button id="uc-x" style="background:#22222f;color:#f2f2f7;border:1px solid #33334a;border-radius:9px;padding:6px 12px;font:13px inherit;cursor:pointer">Stop</button></div>';document.body.appendChild(d);
+var x=document.getElementById('uc-x');if(x)x.onclick=function(){window.__ucStop=1;};}
+function up(m,n,t){var e=document.getElementById('uc-m'),b=document.getElementById('uc-b'),y=document.getElementById('uc-t');if(e)e.textContent=m;if(b)b.style.width=Math.round(i/n*100)+'%';if(y)y.textContent=t||'';}
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
 async function one(u){
  for(var attempt=0;attempt<3;attempt++){
   try{
    var r=await fetch('https://www.instagram.com/api/v1/users/web_profile_info/?username='+encodeURIComponent(u),{headers:{'x-ig-app-id':A,'x-csrftoken':csrf,'x-requested-with':'XMLHttpRequest'},credentials:'include'});
-   if(r.status===429){await sleep(6000+attempt*6000);continue;}
+   if(r.status===429){await sleep(8000+attempt*7000);continue;}
    var t=await r.text();
+   if(/checkpoint_required|challenge_required/i.test(t)){return 'challenge';}
    if(r.status===404||/Page Not Found|user not found|"user":null/i.test(t)){return 'dead';}
    if(r.status===200){var j;try{j=JSON.parse(t);}catch(e){return 'fail';}
     if(j&&j.data&&j.data.user&&j.data.user.username)return 'alive';
-    return 'dead';}
+    if(j&&j.data&&j.data.user===null)return 'dead';
+    return 'fail';}
    return 'fail';
   }catch(e){await sleep(1500+attempt*2000);}
  }
@@ -470,18 +518,24 @@ async function one(u){
 }
 (async function(){
  ui();
+ up('checking that you are logged in…',1,'');
+ if(!/(^|; )ds_user_id=/.test(document.cookie)){up('Not logged in','1','Log in to instagram.com in this browser, then click the bookmark again.');return;}
+ var control=await one('instagram');
+ if(control!=='alive'){up('Could not reach Instagram as a logged-in user','1','Result: '+control+'. Log in normally, reload instagram.com, then try again. Nothing was changed.');return;}
  for(i=0;i<L.length;i++){
+  if(window.__ucStop){break;}
   up('checking @'+L[i],L.length,dead.length+' gone, '+alive.length+' exist, '+fail.length+' failed');
   var v=await one(L[i]);
+  if(v==='challenge'){up('Instagram asked for a security check','1','Open instagram.com, complete the check, then run the bookmark again. Nothing was changed.');return;}
   if(v==='dead')dead.push(L[i]);else if(v==='alive')alive.push(L[i]);else fail.push(L[i]);
   await sleep(700+Math.random()*500);
  }
- var out=JSON.stringify({dead:dead,alive:alive,failed:fail,checked:L.length,when:Date.now()});
+ var out=JSON.stringify({dead:dead,alive:alive,failed:fail,checked:i,when:Date.now()});
  var b64=btoa(unescape(encodeURIComponent(out)));
  up('done — '+dead.length+' gone, '+alive.length+' exist, '+fail.length+' failed',L.length,'opening your results…');
  try{navigator.clipboard&&navigator.clipboard.writeText(out);}catch(e){}
  var w=window.open(R+'#verify='+b64,'_blank');
- if(!w){var ta=document.createElement('textarea');ta.value=out;document.body.appendChild(ta);ta.select();}
+ if(!w){var ta=document.createElement('textarea');ta.value=out;ta.style.cssText='position:fixed;top:0;left:0;width:100%;height:120px;z-index:2147483647';document.body.appendChild(ta);ta.select();}
 })();})();`;
 }
 
@@ -519,6 +573,13 @@ function applyVerification(payload) {
     toast("No \"dead\" list in that output.");
     return;
   }
+  if (!result) {
+    // Results arrived before an export was imported (fresh browser, or the
+    // export was never loaded here). Hold on to them until one is.
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify(data)); } catch { /* ignore */ }
+    toast("Verifier results saved — import your export to apply them.");
+    return;
+  }
   let added = 0;
   for (const name of data.dead) {
     const key = String(name).toLowerCase();
@@ -535,6 +596,14 @@ function applyVerification(payload) {
   renderList();
   toast(`Marked ${fmt(added)} account(s) as gone, ${fmt((data.alive || []).length)} confirmed to exist.`);
   $("verify-panel").open = false;
+}
+
+function applyPendingVerification() {
+  let raw;
+  try { raw = localStorage.getItem(PENDING_KEY); } catch { return; }
+  if (!raw) return;
+  try { localStorage.removeItem(PENDING_KEY); } catch { /* ignore */ }
+  applyVerification(raw);
 }
 
 function readVerifyHash() {
@@ -705,4 +774,11 @@ $("new-export").addEventListener("click", () => {
 });
 
 window.addEventListener("hashchange", readVerifyHash);
-readVerifyHash();
+
+/* Boot: restore the last export (so a verifier link lands on a populated page),
+   then apply any hash payload or queued verifier output. */
+(async function boot() {
+  await restoreLast();
+  readVerifyHash();
+  if (result) applyPendingVerification();
+})();
