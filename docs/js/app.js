@@ -211,6 +211,20 @@ async function present(parsed) {
 }
 
 function renderResultScreen() {
+  probeApi().then((ok) => {
+    const button = $("server-check");
+    const note = $("server-note");
+    if (!button) return;
+    if (!ok) {
+      button.disabled = true;
+      button.textContent = "Server check unavailable";
+      if (note) {
+        note.hidden = false;
+        note.textContent =
+          "The shared checker isn't running right now. Use Option 2 below — it works today and needs nothing from us.";
+      }
+    }
+  });
   $("screen-import").hidden = true;
   $("screen-result").hidden = false;
   $("source-name").textContent = result.sourceName || "Export";
@@ -560,6 +574,24 @@ const API_BASE =
     : "https://unfollow-checker-api.up.railway.app");
 
 const SERVER_BATCH = 200;
+
+// The checker service is optional: if it isn't running, the button says so
+// instead of erroring after a click. Checked once per page load.
+let apiHealthy = null;
+async function probeApi() {
+  if (apiHealthy !== null) return apiHealthy;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+    const response = await fetch(API_BASE + "/healthz", { signal: controller.signal });
+    clearTimeout(timer);
+    const body = await response.json();
+    apiHealthy = response.ok && body.ok === true && Number(body.sessions) > 0;
+  } catch {
+    apiHealthy = false;
+  }
+  return apiHealthy;
+}
 
 async function checkWithServer() {
   const accounts = result ? result.notFollowingBack : [];
