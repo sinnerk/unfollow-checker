@@ -262,6 +262,7 @@ async function restoreLast() {
   activeView = "notFollowingBack";
   query = "";
   $("search").value = "";
+  if (state.gone.size) $("hide-gone").checked = true;
   renderResultScreen();
   return true;
 }
@@ -373,6 +374,12 @@ function updateProgress() {
   $("progress-text").textContent = total
     ? `${fmt(checked)} / ${fmt(total)} checked off`
     : "";
+  const goneInList = currentList().filter((a) => state.gone.has(keyOf(a))).length;
+  const goneNode = $("gone-count");
+  if (goneNode) {
+    goneNode.textContent = goneInList ? `· ${fmt(goneInList)} gone` : "";
+    goneNode.style.color = goneInList ? "var(--bad)" : "";
+  }
 }
 
 function renderList() {
@@ -593,6 +600,9 @@ function applyVerification(payload) {
     state.gone.delete(key);
   }
   saveState();
+  // Once we know which accounts are gone, get them out of the way: hide them by
+  // default but keep the count on screen so they can be brought back.
+  if (added) $("hide-gone").checked = true;
   renderList();
   toast(`Marked ${fmt(added)} account(s) as gone, ${fmt((data.alive || []).length)} confirmed to exist.`);
   $("verify-panel").open = false;
