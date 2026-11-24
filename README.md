@@ -1,182 +1,93 @@
-# Local Instagram Unfollower
+# Unfollow Checker
 
-![Local Instagram Unfollower desktop app](docs/gui.png)
+**See exactly who doesn't follow you back on Instagram.**
 
-A dead-simple, local app that shows who does **not** follow you back on Instagram. Free and open source (MIT).
+### → [sinnerk.github.io/unfollow-checker](https://sinnerk.github.io/unfollow-checker/)
 
-It reads the official **data export** from Instagram (JSON, or HTML in current versions). It does not log in, scrape the website, unfollow anyone automatically, or upload your data anywhere.
+Free, open source (MIT), and it runs entirely in your browser. Drop your Instagram data export on the page and get the real lists in about five seconds — nothing is uploaded, there is no login, and there are no accounts, analytics or scraping anywhere in the flow.
 
-## Use it in your browser (no install, works on a phone)
+---
 
-### **[sinnerk.github.io/unfollow-checker](https://sinnerk.github.io/unfollow-checker/)**
+## What it shows you
 
-Drop your export ZIP on the page. The whole comparison runs in the browser tab — nothing is uploaded, there is no account and no analytics. It includes:
+| List | Meaning |
+| --- | --- |
+| **Following** | accounts you follow |
+| **Followers** | accounts that follow you |
+| **Doesn't follow back** | you follow them, they don't follow you |
+| **Follows you only** | they follow you, you don't follow back |
+| **Mutual** | both directions |
 
-- the same exact counts as the desktop tool (same parsing rules, verified against the CLI on a real export),
-- an export-integrity panel (files read, duplicate rows, truncation warnings),
-- check-off progress saved per export, "Open next & check off", search, CSV,
-- an optional **dead / deactivated account** checker that runs as a bookmarklet inside your own logged-in Instagram tab, plus a tutorial page for every step.
+Plus:
 
-> Why the bookmarklet: Instagram only answers "does this profile still exist?" for a logged-in visitor — every profile URL returns the same generic page when logged out, so it cannot be detected offline. The script is read-only, runs at ~1 account per second, and passes results back in the URL fragment (never sent to a server).
+- **Exact counts.** Handles are reconciled case-insensitively, split files (`followers_1.json`, `followers_2.json`, …) are merged into one list, and duplicate rows are collapsed — so one account never counts twice.
+- **Export integrity panel.** Shows which files were read, how many rows each held, how many duplicates were dropped, and warns you when Instagram's own insights page disagrees with the export (the honest "this list may be a superset" case).
+- **A real work loop.** "Open next & check off" opens the next unchecked profile in a new tab and records it, so you never lose your place. Search, filter, hide what's done, copy the list, download a CSV with follow dates.
+- **Per-export progress.** Check-offs are keyed to the exact export you imported, stored in your own browser. Import a newer export and you start clean instead of inheriting stale marks.
+- **Optional dead-account check.** A one-click bookmarklet runs inside your own logged-in Instagram tab and flags deleted or deactivated accounts (Instagram only answers "does this profile exist?" for a signed-in visitor). Read-only, ~1 account per second, and it never touches a server of ours.
+- **Works on phones.** Same page, same features, thumb-sized controls.
 
-## The easy way (Windows, no Python)
+## How the privacy story actually works
 
-### 1. Get your Instagram export
+The ZIP is opened by JavaScript in your tab. There is no backend, no upload endpoint, and no third-party script — the zip reader is bundled with the site. You can prove it: load the page, switch off your network, and import the file.
 
-1. Open **Instagram Accounts Center**.
-2. Go to **Your information and permissions** -> **Download your information**.
-3. Choose **Some of your information**.
-4. Tick **Followers and following**.
-5. Choose **JSON** as the format.
-6. Download the ZIP when Instagram says it is ready.
+What is stored: your check-offs and gone marks, in this browser's `localStorage`, keyed to that export. Nothing is synced anywhere. Details: [privacy page](https://sinnerk.github.io/unfollow-checker/privacy.html).
 
-### 2. Download the app
+## Get your export (2 minutes)
 
-Open **[Releases](https://github.com/sinnerk/unfollow-checker/releases/latest)** and download **`Local-Instagram-Unfollower.exe`**. Put it anywhere you like, for example your Desktop.
+1. Instagram → **Accounts Center** → **Your information and permissions** → **Download your information**.
+2. Pick the account, then **Create export** → **Download to device**.
+3. Format **JSON**, date range **All time**, and untick everything except **Followers and following**.
+4. When Instagram emails you the ZIP, drop it on the [site](https://sinnerk.github.io/unfollow-checker/app.html). Don't unzip it.
 
-### 3. Run it
+Full walkthrough with screenshots-free step lists and troubleshooting: [tutorials](https://sinnerk.github.io/unfollow-checker/tutorials.html).
 
-Double-click the EXE. No installation, no Python, no account access.
+## FAQ
 
-1. Click **AUTO-FIND MY EXPORT** (it checks Downloads, Desktop and Documents), or pick the ZIP yourself.
-2. Click **STEP 3 GENERATE REPORT**.
-3. The report opens in your browser.
+**Does it unfollow people for me?** No, and it never will. Instagram has no public unfollow API; every "mass unfollow" tool is either scraping your password or breaking the terms. Open the profile, tap Unfollow, come back, hit next.
 
-> **Windows may show a SmartScreen warning** because the app is not code-signed. Click **More info -> Run anyway**. The full source is in this repository, so you can inspect or build it yourself.
+**Someone shows up as not following back, but I think they do.** The export is a snapshot (a day or two old for big accounts), or it's an HTML export — HTML silently drops older rows, which the integrity panel flags. Use JSON for an exact answer.
 
-You can also drag your export ZIP directly onto the EXE.
+**Does it work with HTML exports?** Yes, with that caveat above.
 
-### Why does Windows warn about the EXE?
-
-The EXE is **unsigned**. It has no Authenticode certificate, so Windows cannot verify a publisher. On first launch, SmartScreen may show **"Windows protected your PC"** or the file may say **Unknown publisher**. That is expected for an unsigned app; it is not a virus warning.
-
-Code-signing certificates cost money and require identity verification, so small open-source projects usually ship unsigned builds. You do not have to trust the binary blindly:
-
-- Every line of source is in this repository under the MIT license.
-- You can run the Python source instead of the EXE.
-- You can verify the download against the SHA-256 published in the [release notes](https://github.com/sinnerk/unfollow-checker/releases/latest):
-
-```powershell
-Get-FileHash .\Local-Instagram-Unfollower.exe -Algorithm SHA256
-```
-
-To run the EXE anyway: click **More info -> Run anyway**.
-
-## Run from source (Windows, macOS, Linux)
-
-Prefer to run the Python source? Download the repo, then:
-
-- **Windows:** double-click **`START_HERE.bat`**.
-- **macOS / Linux:** run `python3 gui.py`.
-
-> **Python 3.9 or newer is required**, with Tkinter. On Windows, install Python from [python.org](https://www.python.org/downloads/) and tick **"Add python.exe to PATH"**. On Debian/Ubuntu: `sudo apt install python3-tk`.
-
-You can also drag your export ZIP directly onto `START_HERE.bat`.
-
-## What it shows
-
-![Report screenshot](docs/report.png)
-
-- **Not following back** - accounts you follow that do not follow you.
-- **Fans** - accounts that follow you that you do not follow back.
-- **Mutual** - you follow each other.
-- **Cleanup progress** - check off accounts as you unfollow them. Progress is saved in your browser.
-- **Search, copy, CSV** - find accounts quickly and export the lists.
-
-The report opens Instagram profile links in new tabs. You still click **Unfollow** yourself.
-
-## Privacy
-
-This project contains **no Instagram account data**:
-
-- No export ZIPs, follower lists, usernames from a real account, credentials or local user paths are committed.
-- All names in the tests and screenshots are made up.
-- Generated reports stay in a local `report/` folder next to the app (or in `Documents\Local Instagram Unfollower`) and are excluded by `.gitignore`.
-- The app has no analytics, no telemetry, and makes no network requests. The only network activity happens when **you** click a profile link or the Accounts Center help link.
-
-The repository only contains the source code, fake test data and documentation.
-
-## Where the files go
-
-After generating a report, you will find a `report` folder next to the app:
-
-```text
-report/
-  instagram_unfollowers.html
-  instagram_unfollowers_not_following_back.txt
-  instagram_unfollowers_accounts.csv
-```
-
-If that location is read-only, the app uses `Documents\Local Instagram Unfollower\report` instead. The success dialog shows the exact folder.
-
-These files contain your private follower data. Keep them local and do not commit or upload them.
-
-## CLI (optional)
-
-If you prefer the command line:
-
-```powershell
-python ig_audit.py "C:\path\to\instagram-export.zip" --open
-```
-
-Useful options:
-
-```text
---out PATH    Where to write the HTML report
---open        Open the report when finished
---version     Show the version
-```
-
-## Troubleshooting
-
-**Windows says "Windows protected your PC"**  
-The EXE is unsigned, so SmartScreen cannot verify a publisher. Click **More info -> Run anyway**, verify the SHA-256, or run the source with `START_HERE.bat`. See [Why does Windows warn about the EXE?](#why-does-windows-warn-about-the-exe).
-
-**`START_HERE.bat` closes immediately**  
-Python is probably not installed or is not on `PATH`. Install Python 3.9+ and tick **"Add python.exe to PATH"**. Or use the standalone EXE from Releases.
-
-**Auto-find says no export was found**  
-Click **Pick ZIP file** and choose the ZIP manually. Make sure it is the Instagram export, not the email attachment or an unrelated ZIP.
-
-**The counts look wrong**  
-Use the **JSON** format. A JSON export always contains the complete follower and following lists, even if you picked a date range — the range does not filter these two lists. Instagram truncates long lists in the **HTML** export, and if the file was HTML, the follower list can be missing hundreds of accounts; anyone you follow who is missing from it is reported as not following back. The app compares the listed followers against Instagram's own total (from the export's insights page) and warns you when that happens. Instagram may also split large follower lists into `followers_1.json`, `followers_2.json`, and so on; keep the whole ZIP together so all chunks are read.
-
-**"Could not find the following list"**  
-The export was probably generated without **Followers and following** selected. Request a new export and include that category.
-
-**Why does the report show a warning banner?**  
-Either the export is HTML (lists can be incomplete) or the follower list is shorter than the follower total Instagram reports in the same export. In both cases the "not following back" list is a superset: re-download the export in JSON format for an exact answer.
-
-**Instagram limits or warnings**  
-This tool does not unfollow automatically. If you choose to unfollow manually, do it slowly. Rapid bulk actions can trigger Instagram restrictions.
+**Why do deleted accounts still appear?** The export lists handles, not live profiles. Use the optional bookmarklet check, or mark rows as gone by hand.
 
 ## Development
 
-Run the tests:
+The site and the analysis engine are plain JavaScript and Python — no build step, no framework.
 
 ```bash
-python -m unittest discover -s tests -v
+# website (docs/ is served as-is; any static server works)
+python -m http.server 8765 --directory docs
+
+# parser tests (9)
+node --test tests/web/parse.test.mjs
+
+# CLI + parser tests (24)
+python -m unittest discover -s tests
 ```
 
-The parser supports Instagram's current export format, split follower/following files, ZIP or extracted-folder input, URL-only records, and case-insensitive username matching.
-
-### Build the standalone EXE
-
-```powershell
-uvx pyinstaller --noconfirm --clean --onefile --windowed `
-  --name "Local-Instagram-Unfollower" `
-  --icon "assets/icon.ico" `
-  --add-data "assets/icon.ico;assets" `
-  --version-file "packaging/version_info.txt" `
-  gui.py
+```
+docs/                 the entire website (GitHub Pages source)
+  index.html          landing page
+  app.html            the tool
+  tutorials.html      step-by-step guide
+  privacy.html        what is and isn't sent anywhere
+  js/parse.js         export parser (shared logic, tested)
+  js/app.js           UI
+  vendor/jszip.min.js bundled zip reader (no CDN)
+server/               optional checker API (FastAPI + Cloudflare Worker)
+deploy/               helper scripts
+ig_audit.py           Python engine + CLI used by the tests and by contributors
+tests/                parser and CLI test suites
 ```
 
-The result is `dist/Local-Instagram-Unfollower.exe`.
+`ig_audit.py` still exists as a command-line tool for contributors and for CI parity checks — the website is the product:
 
-## Open source
-
-This project is **MIT licensed**. Read the code, fork it, or build your own EXE. Issues and pull requests are welcome at [github.com/sinnerk/unfollow-checker](https://github.com/sinnerk/unfollow-checker).
+```bash
+python ig_audit.py "/path/to/instagram-export.zip"
+```
 
 ## License
 
-[MIT](LICENSE)
+MIT — see [LICENSE](LICENSE). Not affiliated with Instagram or Meta.
