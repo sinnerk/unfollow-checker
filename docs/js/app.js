@@ -5,7 +5,7 @@
  * the reconciliation, and progress is stored under a fingerprint of the export.
  */
 
-import { analyzeExport, fingerprintOf } from "./parse.js";
+import { analyzeExport, computeDiff, fingerprintOf } from "./parse.js";
 
 const STATE_VERSION = "uc.v1";
 const PAGE_SIZE = 150;
@@ -67,6 +67,56 @@ function saveState() {
       savedAt: Date.now(),
     }));
   } catch { /* quota or private mode */ }
+}
+
+/* ------------------------------------------------------------------ */
+/* export snapshots (so two imports can be compared later)              */
+/* ------------------------------------------------------------------ */
+
+const SNAPSHOTS_KEY = "uc.snapshots.v1";
+const MAX_SNAPSHOTS = 5;
+
+const toPairs = (accounts) =>
+  (accounts || []).map((account) => [account.username, account.timestamp ?? null]);
+const fromPairs = (pairs) =>
+  (pairs || []).map(([username, timestamp]) => ({ username, timestamp: timestamp ?? null }));
+
+function loadSnapshots() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SNAPSHOTS_KEY) || "[]");
+    return Array.isArray(raw)
+      ? raw.filter((s) => s && s.fp && Array.isArray(s.followers) && Array.isArray(s.following))
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveSnapshots(list) {
+  // Newest first. Evict oldest entries until the payload fits — very large
+  // accounts legitimately produce very large lists.
+  for (;;) {
+    try {
+      localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(list));
+      return true;
+    } catch {
+      if (!list.length) return false;
+      list.splice(-1, 1);
+    }
+  }
+}
+
+function storeSnapshot(parsed, fp) {
+  if (!fp || !parsed) return;
+  const snapshots = loadSnapshots().filter((s) => s.fp !== fp);
+  snapshots.unshift({
+    fp,
+    when: Date.now(),
+    label: parsed.sourceName || "Export",
+    followers: toPairs(parsed.followers),
+    following: toPairs(parsed.following),
+  });
+  saveSnapshots(snapshots.slice(0, MAX_SNAPSHOTS));
 }
 
 /* ------------------------------------------------------------------ */
@@ -210,6 +260,7 @@ async function present(parsed) {
   query = "";
   $("search").value = "";
   persistResult();
+  storeSnapshot(parsed, fingerprint);
   renderResultScreen();
   applyPendingVerification();
 }
@@ -235,6 +286,7 @@ function renderResultScreen() {
   renderWarnings();
   renderIntegrity();
   renderBookmarklet();
+  renderHistory();
   document.querySelectorAll(".tab").forEach((tab) => {
     tab.setAttribute("aria-selected", String(tab.dataset.view === activeView));
   });
@@ -273,6 +325,13 @@ async function restoreLast() {
   result = saved;
   fingerprint = saved.fingerprint || (await fingerprintOf([], saved));
   state = loadState(fingerprint);
+  // The trimmed LAST_KEY payload has no full lists; pull them back from the
+  // snapshot store so "changes since last export" works after a reload.
+  const snap = loadSnapshots().find((s) => s.fp === fingerprint);
+  if (snap) {
+    result.followers = fromPairs(snap.followers);
+    result.following = fromPairs(snap.following);
+  }
   shown = PAGE_SIZE;
   activeView = "notFollowingBack";
   query = "";
@@ -508,6 +567,137 @@ function responseToCheck(row, checked) {
 function renderListRowState(row, account) {
   if (!row) return;
   renderList();
+}
+
+/* ------------------------------------------------------------------ */
+/* changes between exports (history diff)                              */
+/* ------------------------------------------------------------------ */
+
+function diffOpenButton(username) {
+  return el("button", {
+    class: "icon-btn",
+    type: "button",
+    title: "Open profile",
+    "aria-label": "Open @" + username + " on Instagram",
+    onclick: () => openProfile(profileUrl(username)),
+    html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M19 15v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h4"/></svg>',
+  });
+}
+
+function diffSection(key, title, accounts, canCopy) {
+  const head = el("div", { class: "diff-head" }, [
+    el("div", { class: "diff-title", text: title }),
+    el("span", {
+      class: "badge" + (accounts.length && key === "unfollowedYou" ? " bad" : ""),
+      text: fmt(accounts.length),
+    }),
+    canCopy && accounts.length
+      ? el("button", {
+          class: "btn small",
+          type: "button",
+          text: "Copy",
+          onclick: async () => {
+            const ok = await copyText(accounts.map((a) => a.username).join("\n"));
+            toast(ok ? "Copied " + fmt(accounts.length) + " usernames." : "Could not copy.");
+          },
+        })
+      : null,
+  ]);
+
+  let body;
+  if (!accounts.length) {
+    body = el("div", { class: "empty", text: "Nothing here." });
+  } else {
+    const rows = accounts.map((account) => {
+      const tags = [];
+      const when = dateText(account.timestamp);
+      if (when) tags.push(el("span", { text: when }));
+      return el("div", { class: "row" }, [
+        el("div", { class: "avatar", text: account.username.slice(0, 2) }),
+        el("div", { class: "who" }, [
+          el("div", { class: "uname", text: "@" + account.username }),
+          el("div", { class: "meta" }, tags),
+        ]),
+        el("div", { class: "acts" }, [diffOpenButton(account.username)]),
+      ]);
+    });
+    body = el("div", { class: "list diff-list" }, rows);
+  }
+  return el("div", { class: "diff-block" }, [head, body]);
+}
+
+function runDiff(snapshot) {
+  const out = $("diff-out");
+  if (!out || !snapshot || !result) return;
+  if (!Array.isArray(result.followers) || !Array.isArray(result.following)) {
+    out.replaceChildren(
+      el("div", { class: "empty", text: "Re-import your current export once to enable comparison (its full lists were not kept in local storage)." }),
+    );
+    return;
+  }
+  const prev = {
+    followers: fromPairs(snapshot.followers),
+    following: fromPairs(snapshot.following),
+  };
+  const diff = computeDiff(prev, result);
+  const when = new Date(snapshot.when).toLocaleString(undefined, {
+    year: "numeric", month: "short", day: "numeric",
+  });
+  out.replaceChildren(
+    el("p", { class: "diff-note", text: "Changes between " + when + " and now." }),
+    diffSection("unfollowedYou", "Unfollowed you", diff.unfollowedYou, true),
+    diffSection("newFollowers", "New followers", diff.newFollowers, true),
+    diffSection("youUnfollowed", "You unfollowed", diff.youUnfollowed, false),
+    diffSection("newlyFollowed", "You newly followed", diff.newlyFollowed, false),
+  );
+}
+
+function renderHistory() {
+  const slot = $("history-slot");
+  if (!slot) return;
+  const badge = $("history-badge");
+  const snapshots = loadSnapshots();
+  const others = snapshots.filter((s) => s.fp !== fingerprint);
+  if (badge) {
+    badge.textContent = snapshots.length ? fmt(snapshots.length) + " saved" : "";
+    badge.hidden = !snapshots.length;
+  }
+
+  if (!snapshots.length) {
+    slot.replaceChildren(el("div", {
+      class: "empty",
+      text: "Snapshots of your exports are kept here. The next time you import a newer export, the exact changes between the two appear in this panel.",
+    }));
+    return;
+  }
+  if (!others.length) {
+    slot.replaceChildren(el("div", {
+      class: "empty",
+      text: "Only the current export is stored so far. Import it again next month — or whenever you next download a newer export — and this panel shows who followed and unfollowed you in between.",
+    }));
+    return;
+  }
+
+  const select = el("select", {
+    id: "history-select",
+    "aria-label": "Choose the earlier export to compare against",
+  }, others.map((s) =>
+    el("option", {
+      value: s.fp,
+      text: (s.label || "Export") + " — " + new Date(s.when).toLocaleString(undefined, {
+        year: "numeric", month: "short", day: "numeric",
+      }),
+    }),
+  ));
+  const button = el("button", {
+    class: "btn primary",
+    type: "button",
+    text: "Compare",
+    onclick: () => runDiff(others.find((s) => s.fp === select.value)),
+  });
+  const out = el("div", { id: "diff-out" });
+  slot.replaceChildren(el("div", { class: "history-bar" }, [select, button]), out);
+  runDiff(others[0]); // default to the most recent previous export
 }
 
 /* ------------------------------------------------------------------ */

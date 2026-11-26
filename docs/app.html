@@ -121,6 +121,16 @@
 
     <div class="list" id="list" role="tabpanel" aria-live="polite"></div>
 
+    <details class="panel" id="history-panel">
+      <summary>Changes since your last export <span class="badge" id="history-badge" hidden></span></summary>
+      <p style="margin-top:10px">
+        Exports you import are remembered in this browser (the newest few). Pick an earlier one
+        below and the page shows exactly what changed between the two snapshots: who unfollowed
+        you, who started following you, who you unfollowed, and who you newly followed.
+      </p>
+      <div id="history-slot" style="margin-top:12px"></div>
+    </details>
+
     <details class="panel" id="verify-panel">
       <summary>Find dead or deactivated accounts <span class="badge" id="verify-badge">optional</span></summary>
       <p style="margin-top:10px">

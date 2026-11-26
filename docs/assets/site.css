@@ -256,6 +256,21 @@ table.mini th { color: var(--muted); font-weight: 550; font-size: 12.5px; }
 table.mini td.num, table.mini th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .scroll-x { overflow-x: auto; }
 
+/* ---------- changes between exports ---------- */
+
+.history-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 4px; }
+.history-bar select {
+  flex: 1 1 260px; min-height: 42px; padding: 0 10px;
+  background: var(--panel-2); color: var(--text);
+  border: 1px solid var(--line); border-radius: 12px; font: inherit; font-size: 14px;
+}
+.diff-note { color: var(--muted); font-size: 13.5px; margin: 10px 0 0; }
+.diff-block { margin-top: 16px; }
+.diff-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.diff-title { font-weight: 650; font-size: 14.5px; }
+.diff-list { margin: 0; max-height: 340px; overflow: auto; }
+.diff-block .row { padding: 9px 12px; }
+
 /* ---------- verify / steps ---------- */
 .steps { counter-reset: s; list-style: none; padding: 0; margin: 0; }
 .steps li {
