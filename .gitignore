@@ -25,5 +25,8 @@ dist/
 *.spec
 
 
+# Server runtime artifacts (never commit live databases)
+server/*.sqlite3
+
 # web build artifacts
 docs/**/*.map

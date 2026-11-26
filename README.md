@@ -77,9 +77,8 @@ docs/                 the entire website (GitHub Pages source)
   js/app.js           UI
   vendor/jszip.min.js bundled zip reader (no CDN)
 server/               optional checker API (FastAPI + Cloudflare Worker)
-deploy/               helper scripts
 ig_audit.py           Python engine + CLI used by the tests and by contributors
-tests/                parser and CLI test suites
+tests/                parser, CLI and UI test suites
 ```
 
 `ig_audit.py` still exists as a command-line tool for contributors and for CI parity checks — the website is the product:
