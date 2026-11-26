@@ -554,6 +554,72 @@ def build_payload(export_path: Path) -> dict[str, Any]:
     }
 
 
+def compute_diff(
+    prev_lists: tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]],
+    cur_lists: tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]],
+) -> dict[str, list[dict[str, Any]]]:
+    """What changed between an older export and the current one.
+
+    Mirrors computeDiff() in docs/js/parse.js so the CLI and the website always
+    agree: keys are already casefolded by load_export, and each section is
+    sorted by the most recent follow date first, then username.
+    """
+    prev_following, prev_followers = prev_lists
+    cur_following, cur_followers = cur_lists
+
+    def left_side(was: dict[str, dict[str, Any]], now: dict[str, dict[str, Any]]):
+        accounts = [entry for key, entry in was.items() if key not in now]
+        accounts.sort(
+            key=lambda account: (
+                -(account.get("timestamp") or 0),
+                str(account["username"]).casefold(),
+            )
+        )
+        return accounts
+
+    return {
+        "unfollowedYou": left_side(prev_followers, cur_followers),
+        "newFollowers": left_side(cur_followers, prev_followers),
+        "youUnfollowed": left_side(prev_following, cur_following),
+        "newlyFollowed": left_side(cur_following, prev_following),
+    }
+
+
+def write_diff_csv(path: Path, diff: dict[str, list[dict[str, Any]]]) -> None:
+    with path.open("w", encoding="utf-8-sig", newline="") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(("category", "username", "profile_url", "timestamp_utc"))
+        for category in (
+            "unfollowedYou",
+            "newFollowers",
+            "youUnfollowed",
+            "newlyFollowed",
+        ):
+            for account in diff[category]:
+                timestamp = account.get("timestamp")
+                timestamp_iso = (
+                    datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
+                    if timestamp
+                    else ""
+                )
+                writer.writerow(
+                    (
+                        category,
+                        account["username"],
+                        f"https://www.instagram.com/{account['username']}/",
+                        timestamp_iso,
+                    )
+                )
+
+
+DIFF_LABELS = (
+    ("unfollowedYou", "Unfollowed you"),
+    ("newFollowers", "New followers"),
+    ("youUnfollowed", "You unfollowed"),
+    ("newlyFollowed", "You newly followed"),
+)
+
+
 # ---------------------------------------------------------------------------
 # Output files
 # ---------------------------------------------------------------------------
@@ -1871,6 +1937,15 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Open the generated report in the default browser.",
     )
+    parser.add_argument(
+        "--diff",
+        type=Path,
+        metavar="OLDER_EXPORT",
+        help=(
+            "Compare with an older export (ZIP or folder): write a diff CSV and "
+            "print who unfollowed you, new followers, and your own unfollows."
+        ),
+    )
     return parser
 
 
@@ -1915,6 +1990,29 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.open:
         webbrowser.open(out_path.as_uri())
+
+    if args.diff:
+        prev_path = args.diff.expanduser().resolve()
+        if not prev_path.exists():
+            print(f"Error: {prev_path} does not exist.", file=sys.stderr)
+            return 1
+        try:
+            prev_lists = load_export(prev_path)[:2]
+            cur_lists = load_export(export_path)[:2]
+        except AuditError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 1
+        diff = compute_diff(prev_lists, cur_lists)
+        diff_csv_path = Path(str(stem) + "_diff.csv")
+        write_diff_csv(diff_csv_path, diff)
+        print()
+        print(f"Diff vs {prev_path.name}:")
+        for key, label in DIFF_LABELS:
+            print(f"  {label:<23} {len(diff[key]):,}")
+            for account in diff[key]:
+                print(f"    @{account['username']}")
+        print()
+        print(f"Diff CSV:    {diff_csv_path}")
 
     return 0
 

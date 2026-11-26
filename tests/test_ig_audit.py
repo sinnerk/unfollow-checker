@@ -78,6 +78,62 @@ def usernames(accounts: list[dict]) -> list[str]:
     return [account["username"] for account in accounts]
 
 
+class DiffTests(unittest.TestCase):
+    def test_compute_diff_sections(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            prev = make_export(
+                Path(tmp) / "prev",
+                followers=["alice", "LeftMe", "renamegone"],
+                following=["alice", "dropped"],
+            )
+            cur = make_export(
+                Path(tmp) / "cur",
+                followers=["alice", "leftme", "newfan"],
+                following=["alice", "newfriend"],
+            )
+            prev_lists = ig_audit.load_export(prev)[:2]
+            cur_lists = ig_audit.load_export(cur)[:2]
+            diff = ig_audit.compute_diff(prev_lists, cur_lists)
+            self.assertEqual(usernames(diff["unfollowedYou"]), ["renamegone"])
+            self.assertEqual(usernames(diff["newFollowers"]), ["newfan"])
+            self.assertEqual(usernames(diff["youUnfollowed"]), ["dropped"])
+            self.assertEqual(usernames(diff["newlyFollowed"]), ["newfriend"])
+
+    def test_compute_diff_same_export_is_empty(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            export = make_export(
+                Path(tmp),
+                followers=["alice", "bob"],
+                following=["alice"],
+            )
+            lists = ig_audit.load_export(export)[:2]
+            diff = ig_audit.compute_diff(lists, lists)
+            for section in ("unfollowedYou", "newFollowers", "youUnfollowed", "newlyFollowed"):
+                self.assertEqual(diff[section], [])
+
+    def test_main_with_diff_writes_csv_and_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            prev = make_export(
+                root / "prev",
+                followers=["alice", "leftme"],
+                following=["alice", "dropped"],
+            )
+            cur = make_export(root / "cur", followers=["alice"], following=["alice"])
+            out = root / "out" / "report.html"
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                rc = ig_audit.main([str(cur), "--out", str(out), "--diff", str(prev)])
+            self.assertEqual(rc, 0)
+            self.assertIn("leftme", stdout.getvalue())
+            self.assertIn("dropped", stdout.getvalue())
+            diff_csv = Path(str(out.with_suffix("")) + "_diff.csv")
+            self.assertTrue(diff_csv.exists())
+            rows = diff_csv.read_text(encoding="utf-8-sig")
+            self.assertIn("unfollowedYou,leftme", rows)
+            self.assertIn("youUnfollowed,dropped", rows)
+
+
 class ParserTests(unittest.TestCase):
     def test_current_export_format(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
