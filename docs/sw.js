@@ -60,16 +60,20 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return; // let everything else through untouched
 
+  // Only navigate-and-precache paths are ours. Everything else goes straight
+  // to the network — zero added latency on anything the page happens to load.
+  const precached = PRECACHE.some(
+    (path) => url.pathname === new URL(path, self.location.origin).pathname,
+  );
+  if (request.mode !== "navigate" && !precached) return;
+
   // Navigations: try the network first (so deploys show up immediately),
   // fall back to whatever we have cached so the page still opens offline.
   if (request.mode === "navigate") {
     event.respondWith(
       (async () => {
         try {
-          const fresh = await fetch(request);
-          const cache = await caches.open(UC_CACHE_VERSION);
-          cache.put(request, fresh.clone());
-          return fresh;
+          return await fetch(request);
         } catch {
           const hit =
             (await caches.match(request, { ignoreSearch: true })) ||
@@ -82,22 +86,13 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Static assets: cache-first. GitHub Pages assets only change when a new
-  // version of the site is deployed, and that bumps UC_CACHE_VERSION.
+  // Static assets that were precached: cache-first. GitHub Pages assets only
+  // change when a new version of the site is deployed, and that bumps
+  // UC_CACHE_VERSION.
   event.respondWith(
     (async () => {
       const cached = await caches.match(request, { ignoreSearch: true });
-      if (cached) return cached;
-      try {
-        const fresh = await fetch(request);
-        if (fresh.ok) {
-          const cache = await caches.open(UC_CACHE_VERSION);
-          cache.put(request, fresh.clone());
-        }
-        return fresh;
-      } catch {
-        return Response.error();
-      }
+      return cached || fetch(request);
     })(),
   );
 });

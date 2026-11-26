@@ -30,3 +30,10 @@ server/*.sqlite3
 
 # web build artifacts
 docs/**/*.map
+
+# local tooling / test artifacts
+node_modules/
+.lighthouseci/
+test-results/
+playwright-report/
+package-lock.json
