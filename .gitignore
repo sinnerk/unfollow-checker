@@ -36,4 +36,3 @@ node_modules/
 .lighthouseci/
 test-results/
 playwright-report/
-package-lock.json
