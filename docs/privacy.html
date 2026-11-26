@@ -59,6 +59,7 @@
 
     <h2 style="margin-top:18px">What is stored, and where</h2>
     <p>Check-offs and "gone" marks are saved in this browser's <code>localStorage</code>, keyed to a fingerprint of the export you imported. They are not synced anywhere and are not readable by other sites. <b>Reset</b> clears check-offs; <b>Clear gone marks</b> clears the other.</p>
+    <p>The <b>changes-between-exports</b> feature keeps a small snapshot of the last few exports you imported (the follower/following handles and follow dates) in the same <code>localStorage</code>, so the page can compute what changed between two exports. Like everything else, those snapshots never leave your browser, and they are replaced as newer exports come in.</p>
 
     <h2 style="margin-top:18px">The dead-account checker</h2>
     <p>That one feature needs your Instagram session, because Instagram answers "does this profile exist?" only for a logged-in visitor. It works like this:</p>
