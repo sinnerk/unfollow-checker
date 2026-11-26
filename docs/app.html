@@ -18,6 +18,7 @@
 <link rel="icon" href="assets/icon.png">
 <link rel="apple-touch-icon" href="assets/icon.png">
 <link rel="stylesheet" href="assets/site.css">
+<script src="js/i18n.js"></script>
 </head>
 <body>
 
@@ -35,10 +36,18 @@
       Unfollow Checker
     </a>
     <nav>
-      <a href="index.html">Home</a>
-      <a href="tutorials.html">Tutorials</a>
-      <a href="privacy.html" class="opt">Privacy</a>
-      <a href="https://github.com/sinnerk/unfollow-checker" class="opt" rel="noopener">GitHub</a>
+      <a href="index.html" data-i18n="nav.home">Home</a>
+      <a href="tutorials.html" data-i18n="nav.tutorials">Tutorials</a>
+      <a href="privacy.html" class="opt" data-i18n="nav.privacy">Privacy</a>
+      <a href="https://github.com/sinnerk/unfollow-checker" class="opt" rel="noopener" data-i18n="nav.github">GitHub</a>
+      <select class="lang-switch" aria-label="Language">
+        <option value="en">EN</option>
+        <option value="es">ES</option>
+        <option value="pt">PT</option>
+        <option value="hi">हि</option>
+        <option value="id">ID</option>
+        <option value="ja">JA</option>
+      </select>
     </nav>
   </div>
 </header>
@@ -48,30 +57,30 @@
   <!-- ---------------- import ---------------- -->
   <section id="screen-import">
     <div class="hero" style="padding-top:26px">
-      <h1>Drop your export. Get the list.</h1>
-      <p>Your ZIP is read inside this tab — it is never uploaded. If you don't have the file yet, <a href="tutorials.html#download" style="color:var(--text);text-decoration:underline">get your export in 2 minutes</a>.</p>
+      <h1 data-i18n="app.title">Drop your export. Get the list.</h1>
+      <p data-i18n-html="app.lede">Your ZIP is read inside this tab — it is never uploaded. If you don't have the file yet, <a href="tutorials.html#download" style="color:var(--text);text-decoration:underline">get your export in 2 minutes</a>.</p>
     </div>
 
-    <div class="drop" id="drop" role="button" tabindex="0" aria-label="Choose your Instagram export ZIP file">
+    <div class="drop" id="drop" role="button" tabindex="0" aria-label="Choose your Instagram export ZIP file" data-i18n-aria-label="app.dropBig">
       <div class="drop-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
           <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>
         </svg>
       </div>
-      <div class="big">Drop your export .zip here</div>
-      <div class="small">or tap to choose a file — JSON export recommended, HTML also supported</div>
+      <div class="big" data-i18n="app.dropBig">Drop your export .zip here</div>
+      <div class="small" data-i18n="app.dropSmall">or tap to choose a file — JSON export recommended, HTML also supported</div>
       <input type="file" id="file" accept=".zip,application/zip,.json" multiple>
     </div>
 
     <div class="pillbar">
-      <span class="pill">🔒 <b>100% local</b> — no upload, no server</span>
-      <span class="pill">⚡ Parse in seconds</span>
-      <span class="pill">📱 Works on phone</span>
-      <span class="pill">🧾 Exact counts, verified</span>
+      <span class="pill" data-i18n="app.pill1">🔒 <b>100% local</b> — no upload, no server</span>
+      <span class="pill" data-i18n="app.pill2">⚡ Parse in seconds</span>
+      <span class="pill" data-i18n="app.pill3">📱 Works on phone</span>
+      <span class="pill" data-i18n="app.pill4">🧾 Exact counts, verified</span>
     </div>
 
     <div id="import-status" class="panel" hidden>
-      <div id="status-text">Reading export…</div>
+      <div id="status-text" data-i18n="app.reading">Reading export…</div>
       <div class="bar"><div id="status-bar"></div></div>
       <div style="font-size:13px;color:var(--muted)" id="status-sub"></div>
     </div>
@@ -83,7 +92,7 @@
   <section id="screen-result" hidden>
     <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:18px 0 0">
       <div style="font-weight:650;font-size:16px" id="source-name">Export</div>
-      <button class="btn small ghost" id="new-export" type="button">Load a different export</button>
+      <button class="btn small ghost" id="new-export" type="button" data-i18n="app.loadDifferent">Load a different export</button>
     </div>
 
     <div class="stats" id="stats"></div>
@@ -93,37 +102,37 @@
     <div class="toolbar">
       <div class="search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="search" type="search" placeholder="Search username" autocomplete="off" aria-label="Search username">
+        <input id="search" type="search" placeholder="Search username" autocomplete="off" aria-label="Search username" data-i18n-placeholder="app.search" data-i18n-aria-label="app.search">
       </div>
-      <button class="btn primary" id="open-next" type="button">Open next &amp; check off ↗</button>
+      <button class="btn primary" id="open-next" type="button" data-i18n="app.openNext">Open next &amp; check off ↗</button>
     </div>
 
     <div class="tabs" role="tablist">
-      <button class="tab" role="tab" data-view="notFollowingBack" aria-selected="true">Doesn't follow back <span class="count" data-count="notFollowingBack">0</span></button>
-      <button class="tab" role="tab" data-view="fans" aria-selected="false">Follows you only <span class="count" data-count="fans">0</span></button>
-      <button class="tab" role="tab" data-view="mutual" aria-selected="false">Mutual <span class="count" data-count="mutual">0</span></button>
+      <button class="tab" role="tab" data-view="notFollowingBack" aria-selected="true"><span data-i18n="app.tab.notFollowingBack">Doesn't follow back</span> <span class="count" data-count="notFollowingBack">0</span></button>
+      <button class="tab" role="tab" data-view="fans" aria-selected="false"><span data-i18n="app.tab.fans">Follows you only</span> <span class="count" data-count="fans">0</span></button>
+      <button class="tab" role="tab" data-view="mutual" aria-selected="false"><span data-i18n="app.tab.mutual">Mutual</span> <span class="count" data-count="mutual">0</span></button>
     </div>
 
     <div class="toolbar">
       <label class="btn small ghost" style="cursor:pointer">
-        <input type="checkbox" id="hide-checked" style="margin:0"> Hide checked
+        <input type="checkbox" id="hide-checked" style="margin:0"> <span data-i18n="app.hideChecked">Hide checked</span>
       </label>
       <label class="btn small ghost" style="cursor:pointer">
-        <input type="checkbox" id="hide-gone" style="margin:0"> Hide gone accounts
+        <input type="checkbox" id="hide-gone" style="margin:0"> <span data-i18n="app.hideGone">Hide gone accounts</span>
       </label>
       <span style="font-size:13px;color:var(--muted)" id="progress-text"></span>
       <span style="font-size:13px;color:var(--muted)" id="gone-count"></span>
       <span class="grow"></span>
-      <button class="btn small" id="copy-list" type="button">Copy usernames</button>
-      <button class="btn small" id="download-csv" type="button">CSV</button>
-      <button class="btn small danger" id="reset-progress" type="button">Reset</button>
+      <button class="btn small" id="copy-list" type="button" data-i18n="app.copyList">Copy usernames</button>
+      <button class="btn small" id="download-csv" type="button" data-i18n="app.csv">CSV</button>
+      <button class="btn small danger" id="reset-progress" type="button" data-i18n="app.reset">Reset</button>
     </div>
 
     <div class="list" id="list" role="tabpanel" aria-live="polite"></div>
 
     <details class="panel" id="history-panel">
-      <summary>Changes since your last export <span class="badge" id="history-badge" hidden></span></summary>
-      <p style="margin-top:10px">
+      <summary><span data-i18n="history.title">Changes since your last export</span> <span class="badge" id="history-badge" hidden></span></summary>
+      <p style="margin-top:10px" data-i18n="history.lede">
         Exports you import are remembered in this browser (the newest few). Pick an earlier one
         below and the page shows exactly what changed between the two snapshots: who unfollowed
         you, who started following you, who you unfollowed, and who you newly followed.
@@ -132,8 +141,8 @@
     </details>
 
     <details class="panel" id="verify-panel">
-      <summary>Find dead or deactivated accounts <span class="badge" id="verify-badge">optional</span></summary>
-      <p style="margin-top:10px">
+      <summary><span data-i18n="verify.title">Find dead or deactivated accounts</span> <span class="badge" id="verify-badge" data-i18n="verify.badge">optional</span></summary>
+      <p style="margin-top:10px" data-i18n="verify.lede">
         Instagram only answers "does this account still exist?" for a logged-in session — every
         profile URL returns the same generic page when you are logged out. There are two ways to get
         that answer below: a shared checker service, or a one-click script that runs in your own tab.
@@ -141,16 +150,16 @@
 
       <div class="verify-option" id="server-option">
         <div class="vo-head">
-          <h3>Option 1 — server check</h3>
-          <span class="badge" id="server-badge">fastest</span>
+          <h3 data-i18n="verify.opt1.title">Option 1 — server check</h3>
+          <span class="badge" id="server-badge" data-i18n="verify.opt1.badge">fastest</span>
         </div>
-        <p>
+        <p data-i18n="verify.opt1.body">
           We send <b>only the usernames</b> on this list to a small checker service, which asks
           Instagram whether each profile still exists. Your export, your account and your session
           never leave your browser — the service has no idea who you are, and it answers from its
           own capacity.
         </p>
-        <button class="btn primary" id="server-check" type="button">Check these accounts</button>
+        <button class="btn primary" id="server-check" type="button" data-i18n="verify.opt1.button">Check these accounts</button>
         <p id="server-note" style="margin:10px 0 0" hidden></p>
         <div id="server-progress" hidden>
           <div class="bar"><div id="server-bar"></div></div>
@@ -160,28 +169,28 @@
 
       <div class="verify-option">
         <div class="vo-head">
-          <h3>Option 2 — run it yourself</h3>
-          <span class="badge">always works</span>
+          <h3 data-i18n="verify.opt2.title">Option 2 — run it yourself</h3>
+          <span class="badge" data-i18n="verify.opt2.badge">always works</span>
         </div>
-        <p>
+        <p data-i18n="verify.opt2.body">
           This runs in your own Instagram tab with your own session. Slower to set up, but it never
           depends on our service and it works even if you're rate-limited elsewhere.
         </p>
         <ol class="steps" style="margin-top:12px">
-          <li><b>Drag this button</b> to your bookmarks bar (desktop) — or use <b>Copy the script</b> and paste it into the URL field of a new bookmark: <br><span id="bookmarklet-slot">loading…</span></li>
-          <li>Open <a href="https://www.instagram.com/" target="_blank" rel="noopener" style="color:var(--text);text-decoration:underline">instagram.com</a> in that same browser and make sure you're logged in.</li>
-          <li>Click the bookmark. A panel appears and checks every account one by one (~1 per second).</li>
-          <li>When it finishes, it copies the results and reopens this page with them filled in.</li>
+          <li><span data-i18n-html="verify.opt2.step1"><b>Drag this button</b> to your bookmarks bar (desktop) — or use <b>Copy the script</b> and paste it into the URL field of a new bookmark:</span> <br><span id="bookmarklet-slot">loading…</span></li>
+          <li><span data-i18n-html="verify.opt2.step2">Open <a href="https://www.instagram.com/" target="_blank" rel="noopener" style="color:var(--text);text-decoration:underline">instagram.com</a> in that same browser and make sure you're logged in.</span></li>
+          <li data-i18n="verify.opt2.step3">Click the bookmark. A panel appears and checks every account one by one (~1 per second).</li>
+          <li data-i18n="verify.opt2.step4">When it finishes, it copies the results and reopens this page with them filled in.</li>
         </ol>
       </div>
 
-      <p style="margin:12px 0 8px">Got the results as text? Paste them here:</p>
+      <p style="margin:12px 0 8px" data-i18n="verify.pastePrompt">Got the results as text? Paste them here:</p>
       <textarea id="verify-paste" placeholder='{"dead":["username1","username2"]}'></textarea>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-        <button class="btn primary" id="apply-verify" type="button">Apply results</button>
-        <button class="btn ghost" id="clear-dead" type="button">Clear gone marks</button>
+        <button class="btn primary" id="apply-verify" type="button" data-i18n="verify.apply">Apply results</button>
+        <button class="btn ghost" id="clear-dead" type="button" data-i18n="verify.clearGone">Clear gone marks</button>
       </div>
-      <p style="margin:12px 0 0;font-size:13px">
+      <p style="margin:12px 0 0;font-size:13px" data-i18n="verify.phoneNote">
         On a phone bookmarklets don't work — use the <b>mark as gone</b> button on any row after
         opening a profile and seeing "Sorry, this page isn't available".
       </p>
@@ -189,20 +198,20 @@
 
 
     <details class="panel" id="devices-panel">
-      <summary>Move progress between devices <span class="badge">optional</span></summary>
-      <p style="margin-top:10px">
+      <summary><span data-i18n="devices.title">Move progress between devices</span> <span class="badge" data-i18n="verify.badge">optional</span></summary>
+      <p style="margin-top:10px" data-i18n="devices.lede">
         Check-offs and gone marks live in <b>this browser only</b>. Download them as a small file to
         continue on another device, or to keep them safe before clearing your browser data.
       </p>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" id="export-progress" type="button">Download progress</button>
-        <button class="btn ghost" id="import-progress" type="button">Restore from a file</button>
+        <button class="btn" id="export-progress" type="button" data-i18n="devices.download">Download progress</button>
+        <button class="btn ghost" id="import-progress" type="button" data-i18n="devices.restore">Restore from a file</button>
         <input type="file" id="progress-file" accept="application/json,.json" hidden>
       </div>
       <p id="progress-note" style="margin:10px 0 0;font-size:13px"></p>
     </details>
     <details class="panel" id="integrity-panel">
-      <summary>Export integrity <span class="badge" id="integrity-badge">checking</span></summary>
+      <summary><span data-i18n="integrity.title">Export integrity</span> <span class="badge" id="integrity-badge">checking</span></summary>
       <div id="integrity-body"></div>
     </details>
   </section>
@@ -212,10 +221,10 @@
 <footer class="site">
   <div class="wrap">
     <span>Unfollow Checker — free, open source, local-first.</span>
-    <a href="index.html">Home</a>
-    <a href="tutorials.html">Tutorials</a>
-    <a href="privacy.html">Privacy</a>
-    <a href="https://github.com/sinnerk/unfollow-checker" rel="noopener">Source</a>
+    <a href="index.html" data-i18n="nav.home">Home</a>
+    <a href="tutorials.html" data-i18n="nav.tutorials">Tutorials</a>
+    <a href="privacy.html" data-i18n="nav.privacy">Privacy</a>
+    <a href="https://github.com/sinnerk/unfollow-checker" rel="noopener" data-i18n="footer.source">Source</a>
   </div>
 </footer>
 

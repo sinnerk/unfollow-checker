@@ -10,6 +10,9 @@ import { analyzeExport, computeDiff, fingerprintOf } from "./parse.js";
 const STATE_VERSION = "uc.v1";
 const PAGE_SIZE = 150;
 const SITE_URL = location.origin + location.pathname.replace(/[^/]*$/, "");
+// UI strings come from js/i18n.js (loaded before this module). Missing keys
+// fall back to the English text inside i18n.js itself.
+const T = (key, params) => (window.ucT ? window.ucT(key, params) : key);
 
 const $ = (id) => document.getElementById(id);
 const el = (tag, attrs = {}, children = []) => {
@@ -177,7 +180,7 @@ const RELEVANT = /(\/|^)(followers?[^/]*\.(json|html))$|(\/|^)(following[^/]*\.(
 
 async function readZip(file, onProgress) {
   if (typeof JSZip === "undefined") {
-    throw new Error("The zip reader failed to load. Check your connection and reload the page.");
+    throw new Error(T("toast.zipReaderFailed"));
   }
   const zip = await JSZip.loadAsync(file);
   const entries = [];
@@ -209,12 +212,12 @@ async function handleFiles(fileList) {
   if (!files.length) return;
   $("import-error").hidden = true;
   $("import-status").hidden = false;
-  $("status-text").textContent = "Reading export…";
+  $("status-text").textContent = T("app.reading");
   $("status-bar").style.width = "8%";
   const biggest = Math.max(...files.map((f) => f.size || 0));
   $("status-sub").textContent =
     (biggest > 150 * 1024 * 1024
-      ? `Large export (${Math.round(biggest / 1048576)} MB) — on a phone this can take a minute. `
+      ? T("app.largeExport", { mb: Math.round(biggest / 1048576) })
       : "") + files.map((f) => f.name).join(", ");
 
   try {
@@ -224,7 +227,7 @@ async function handleFiles(fileList) {
         $("status-bar").style.width = Math.min(85, 8 + (done / Math.max(total, 1)) * 70) + "%";
         $("status-sub").textContent = path;
       });
-      $("status-text").textContent = "Comparing lists…";
+      $("status-text").textContent = T("app.comparing");
       $("status-bar").style.width = "90%";
       parsed = analyzeExport(entries);
       parsed.sourceName = files[0].name;
@@ -233,7 +236,7 @@ async function handleFiles(fileList) {
       for (const file of files) {
         entries.push({ path: file.name, text: await file.text() });
       }
-      $("status-text").textContent = "Comparing lists…";
+      $("status-text").textContent = T("app.comparing");
       parsed = analyzeExport(entries);
       parsed.sourceName = files.map((f) => f.name).join(", ");
     }
@@ -245,8 +248,7 @@ async function handleFiles(fileList) {
     console.error(error);
     $("import-status").hidden = true;
     showImportError(
-      (error && error.message) ||
-        "That file could not be read. Make sure it is the .zip Instagram emailed you.",
+      (error && error.message) || T("toast.cannotRead"),
     );
   }
 }
@@ -348,11 +350,11 @@ async function restoreLast() {
 function renderStats() {
   const s = result.stats;
   const cards = [
-    ["following", "Following", false],
-    ["followers", "Followers", false],
-    ["notFollowingBack", "Don't follow back", true],
-    ["fans", "Follows you only", false],
-    ["mutual", "Mutual", false],
+    ["following", T("stats.following"), false],
+    ["followers", T("stats.followers"), false],
+    ["notFollowingBack", T("stats.notFollowingBack"), true],
+    ["fans", T("stats.fans"), false],
+    ["mutual", T("stats.mutual"), false],
   ];
   const wrap = $("stats");
   wrap.replaceChildren(
@@ -385,10 +387,10 @@ function renderIntegrity() {
   const complete = integ.complete;
   const badge = $("integrity-badge");
   badge.className = "badge " + (complete ? "ok" : "warn");
-  badge.textContent = complete ? "complete" : "incomplete";
+  badge.textContent = complete ? T("integrity.badge.ok") : T("integrity.badge.warn");
   if (integ.duplicates) {
     badge.className = "badge bad";
-    badge.textContent = integ.duplicates + " duplicates";
+    badge.textContent = T("integrity.badge.dup", { n: fmt(integ.duplicates) });
   }
 
   const rows = integ.sources.map((source) =>
@@ -402,26 +404,32 @@ function renderIntegrity() {
   $("integrity-body").replaceChildren(
     el("p", {
       style: "margin:10px 0 0",
-      text:
-        "Read " + fmt(integ.filesRead || integ.sources.length) + " list file(s), " +
-        fmt(integ.rowsRead) + " row(s); " + fmt(integ.duplicates) + " duplicate row(s) dropped, " +
-        fmt(integ.rowsSkipped) + " unreadable row(s). Format: " + (info.format || "unknown") + ".",
+      text: T("integrity.summary", {
+        files: fmt(integ.filesRead || integ.sources.length),
+        rows: fmt(integ.rowsRead),
+        dups: fmt(integ.duplicates),
+        skipped: fmt(integ.rowsSkipped),
+        format: info.format || "unknown",
+      }),
     }),
     el("div", { class: "scroll-x" }, [
       el("table", { class: "mini" }, [
         el("thead", {}, [el("tr", {}, [
-          el("th", { text: "File" }), el("th", { text: "List" }), el("th", { class: "num", text: "Rows" }),
+          el("th", { text: T("integrity.file") }),
+          el("th", { text: T("integrity.list") }),
+          el("th", { class: "num", text: T("integrity.rows") }),
         ])]),
         el("tbody", {}, rows),
       ]),
     ]),
     integ.reportedFollowers
       ? el("p", {
-          text:
-            "Instagram's own insights page reported " + fmt(integ.reportedFollowers) +
-            " followers at export time; this export lists " + fmt(integ.followers) + ".",
+          text: T("integrity.reported", {
+            reported: fmt(integ.reportedFollowers),
+            listed: fmt(integ.followers),
+          }),
         })
-      : el("p", { text: "No audience-insights page in this export, so the follower count could not be cross-checked against Instagram's own number." }),
+      : el("p", { text: T("integrity.noReport") }),
   );
 }
 
@@ -448,12 +456,12 @@ function updateProgress() {
   const total = currentList().length;
   const checked = currentList().filter((a) => state.handled.has(keyOf(a))).length;
   $("progress-text").textContent = total
-    ? `${fmt(checked)} / ${fmt(total)} checked off`
+    ? T("app.checkedOf", { n: fmt(checked), m: fmt(total) })
     : "";
   const goneInList = currentList().filter((a) => state.gone.has(keyOf(a))).length;
   const goneNode = $("gone-count");
   if (goneNode) {
-    goneNode.textContent = goneInList ? `· ${fmt(goneInList)} gone` : "";
+    goneNode.textContent = goneInList ? T("app.goneSuffix", { n: fmt(goneInList) }) : "";
     goneNode.style.color = goneInList ? "var(--bad)" : "";
   }
 }
@@ -467,10 +475,10 @@ function renderList() {
 
   if (!all.length) {
     const message = currentList().length
-      ? "Nothing matches this filter."
+      ? T("list.noMatch")
       : activeView === "notFollowingBack"
-        ? "Everyone you follow follows you back."
-        : "This list is empty.";
+        ? T("list.allGood")
+        : T("list.empty");
     list.replaceChildren(el("div", { class: "empty", text: message }));
     updateProgress();
     return;
@@ -488,7 +496,10 @@ function renderList() {
         el("button", {
           class: "btn small",
           type: "button",
-          text: `Show ${fmt(Math.min(PAGE_SIZE, all.length - slice.length))} more of ${fmt(all.length)}`,
+          text: T("app.showMore", {
+            n: fmt(Math.min(PAGE_SIZE, all.length - slice.length)),
+            m: fmt(all.length),
+          }),
           onclick: () => { shown += PAGE_SIZE; renderList(); },
         }),
       ]),
@@ -504,8 +515,8 @@ function rowFor(account) {
   const alive = state.alive.has(key);
 
   const tags = [];
-  if (gone) tags.push(el("span", { class: "tag gone", text: "gone" }));
-  else if (alive) tags.push(el("span", { class: "tag good", text: "exists" }));
+  if (gone) tags.push(el("span", { class: "tag gone", text: T("row.gone") }));
+  else if (alive) tags.push(el("span", { class: "tag good", text: T("row.exists") }));
   const when = dateText(account.timestamp);
   if (when) tags.push(el("span", { text: when }));
 
@@ -517,7 +528,7 @@ function rowFor(account) {
       type: "button",
       role: "checkbox",
       "aria-checked": String(handled),
-      "aria-label": "Check off @" + account.username,
+      "aria-label": T("row.checkOff", { u: account.username }),
       onclick: (event) => {
         if (state.handled.has(key)) state.handled.delete(key);
         else state.handled.add(key);
@@ -536,16 +547,16 @@ function rowFor(account) {
       el("button", {
         class: "icon-btn",
         type: "button",
-        title: "Open profile",
-        "aria-label": "Open @" + account.username + " on Instagram",
+        title: T("row.openProfile"),
+        "aria-label": T("row.openOn", { u: account.username }),
         onclick: () => openProfile(profileUrl(account.username)),
         html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M19 15v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h4"/></svg>',
       }),
       el("button", {
         class: "icon-btn",
         type: "button",
-        title: gone ? "Unmark gone" : "Mark as gone (deleted or deactivated)",
-        "aria-label": "Mark @" + account.username + " as gone",
+        title: gone ? T("row.unmarkGone") : T("row.markGone"),
+        "aria-label": T("row.markGone") + " @" + account.username,
         onclick: (event) => {
           if (state.gone.has(key)) state.gone.delete(key);
           else { state.gone.add(key); state.alive.delete(key); }
@@ -577,8 +588,8 @@ function diffOpenButton(username) {
   return el("button", {
     class: "icon-btn",
     type: "button",
-    title: "Open profile",
-    "aria-label": "Open @" + username + " on Instagram",
+    title: T("row.openProfile"),
+    "aria-label": T("row.openOn", { u: username }),
     onclick: () => openProfile(profileUrl(username)),
     html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M19 15v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h4"/></svg>',
   });
@@ -595,10 +606,10 @@ function diffSection(key, title, accounts, canCopy) {
       ? el("button", {
           class: "btn small",
           type: "button",
-          text: "Copy",
+          text: T("history.copy"),
           onclick: async () => {
             const ok = await copyText(accounts.map((a) => a.username).join("\n"));
-            toast(ok ? "Copied " + fmt(accounts.length) + " usernames." : "Could not copy.");
+            toast(ok ? T("toast.copiedN", { n: fmt(accounts.length) }) : T("toast.copyFallback"));
           },
         })
       : null,
@@ -606,7 +617,7 @@ function diffSection(key, title, accounts, canCopy) {
 
   let body;
   if (!accounts.length) {
-    body = el("div", { class: "empty", text: "Nothing here." });
+    body = el("div", { class: "empty", text: T("history.nothing") });
   } else {
     const rows = accounts.map((account) => {
       const tags = [];
@@ -630,9 +641,7 @@ function runDiff(snapshot) {
   const out = $("diff-out");
   if (!out || !snapshot || !result) return;
   if (!Array.isArray(result.followers) || !Array.isArray(result.following)) {
-    out.replaceChildren(
-      el("div", { class: "empty", text: "Re-import your current export once to enable comparison (its full lists were not kept in local storage)." }),
-    );
+    out.replaceChildren(el("div", { class: "empty", text: T("history.reimport") }));
     return;
   }
   const prev = {
@@ -644,11 +653,11 @@ function runDiff(snapshot) {
     year: "numeric", month: "short", day: "numeric",
   });
   out.replaceChildren(
-    el("p", { class: "diff-note", text: "Changes between " + when + " and now." }),
-    diffSection("unfollowedYou", "Unfollowed you", diff.unfollowedYou, true),
-    diffSection("newFollowers", "New followers", diff.newFollowers, true),
-    diffSection("youUnfollowed", "You unfollowed", diff.youUnfollowed, false),
-    diffSection("newlyFollowed", "You newly followed", diff.newlyFollowed, false),
+    el("p", { class: "diff-note", text: T("history.note", { when }) }),
+    diffSection("unfollowedYou", T("history.unfollowedYou"), diff.unfollowedYou, true),
+    diffSection("newFollowers", T("history.newFollowers"), diff.newFollowers, true),
+    diffSection("youUnfollowed", T("history.youUnfollowed"), diff.youUnfollowed, false),
+    diffSection("newlyFollowed", T("history.newlyFollowed"), diff.newlyFollowed, false),
   );
 }
 
@@ -659,28 +668,22 @@ function renderHistory() {
   const snapshots = loadSnapshots();
   const others = snapshots.filter((s) => s.fp !== fingerprint);
   if (badge) {
-    badge.textContent = snapshots.length ? fmt(snapshots.length) + " saved" : "";
+    badge.textContent = snapshots.length ? T("history.saved", { n: fmt(snapshots.length) }) : "";
     badge.hidden = !snapshots.length;
   }
 
   if (!snapshots.length) {
-    slot.replaceChildren(el("div", {
-      class: "empty",
-      text: "Snapshots of your exports are kept here. The next time you import a newer export, the exact changes between the two appear in this panel.",
-    }));
+    slot.replaceChildren(el("div", { class: "empty", text: T("history.noneYet") }));
     return;
   }
   if (!others.length) {
-    slot.replaceChildren(el("div", {
-      class: "empty",
-      text: "Only the current export is stored so far. Import it again next month — or whenever you next download a newer export — and this panel shows who followed and unfollowed you in between.",
-    }));
+    slot.replaceChildren(el("div", { class: "empty", text: T("history.onlyCurrent") }));
     return;
   }
 
   const select = el("select", {
     id: "history-select",
-    "aria-label": "Choose the earlier export to compare against",
+    "aria-label": T("history.select"),
   }, others.map((s) =>
     el("option", {
       value: s.fp,
@@ -692,7 +695,7 @@ function renderHistory() {
   const button = el("button", {
     class: "btn primary",
     type: "button",
-    text: "Compare",
+    text: T("history.compare"),
     onclick: () => runDiff(others.find((s) => s.fp === select.value)),
   });
   const out = el("div", { id: "diff-out" });
@@ -788,7 +791,7 @@ async function checkWithServer() {
   const accounts = result ? result.notFollowingBack : [];
   const names = accounts.map((a) => a.username);
   if (!names.length) {
-    toast("There is nothing to check.");
+    toast(T("toast.nothingToCheck"));
     return;
   }
 
@@ -799,7 +802,7 @@ async function checkWithServer() {
   button.disabled = true;
   progress.hidden = false;
   bar.style.width = "2%";
-  status.textContent = "Contacting the checker service…";
+  status.textContent = T("toast.contacting");
 
   // Leave out accounts we already know the answer for.
   const unknown = names.filter((name) => {
@@ -824,24 +827,22 @@ async function checkWithServer() {
           body: JSON.stringify({ usernames: batch }),
         });
       } catch {
-        throw new Error(
-          "Could not reach the checker service. Use Option 2 (the bookmarklet) instead.",
-        );
+        throw new Error(T("toast.unreachable"));
       }
 
       if (response.status === 503) {
         const body = await response.json().catch(() => ({}));
         throw new Error(
           body.error === "no_session"
-            ? "The checker service has no Instagram session configured yet. Use Option 2 below — it works today."
-            : "The checker service can't reach Instagram right now. Use Option 2 below.",
+            ? T("toast.noSession")
+            : T("toast.serviceDown"),
         );
       }
       if (response.status === 429) {
-        throw new Error("The checker service is busy (rate limited). Wait a minute, or use Option 2.");
+        throw new Error(T("toast.rateLimited"));
       }
       if (!response.ok) {
-        throw new Error("The checker service returned an error (" + response.status + "). Use Option 2.");
+        throw new Error(T("toast.serviceError", { code: response.status }));
       }
 
       const body = await response.json();
@@ -852,17 +853,25 @@ async function checkWithServer() {
       }
       done += batch.length;
       bar.style.width = Math.min(96, 4 + (done / Math.max(total, 1)) * 92) + "%";
-      status.textContent =
-        `${done} of ${total} checked — ${dead.length} gone, ${alive.length} exist, ${failed.length} unknown`;
+      status.textContent = T("toast.serverProgress", {
+        done: fmt(done),
+        total: fmt(total),
+        gone: dead.length,
+        exist: alive.length,
+        unknown: failed.length,
+      });
     }
 
     bar.style.width = "100%";
-    status.textContent =
-      `Done — ${dead.length} gone, ${alive.length} exist, ${failed.length} unknown.`;
+    status.textContent = T("toast.serverDone", {
+      gone: dead.length,
+      exist: alive.length,
+      unknown: failed.length,
+    });
     if (dead.length || alive.length) {
       applyVerification({ dead, alive, failed, checked: total, when: Date.now() });
     } else {
-      toast("The service could not classify anything this time.");
+      toast(T("toast.nothingClassified"));
     }
   } catch (error) {
     bar.style.width = "0%";
@@ -876,7 +885,7 @@ async function checkWithServer() {
 function renderBookmarklet() {
   const names = result.notFollowingBack.map((a) => a.username);
   if (!names.length) {
-    $("bookmarklet-slot").textContent = "Nothing to check — the list is empty.";
+    $("bookmarklet-slot").textContent = T("verify.slot.empty");
     return;
   }
   const code = buildVerifierScript(names, SITE_URL);
@@ -884,21 +893,21 @@ function renderBookmarklet() {
   const link = el("a", {
     class: "bm",
     href,
-    text: "Check " + fmt(names.length) + " accounts",
+    text: T("verify.bm.check", { n: fmt(names.length) }),
     onclick: (event) => event.preventDefault(),
   });
   const copyButton = el("button", {
     class: "btn small",
     type: "button",
-    text: "Copy the script",
+    text: T("verify.bm.copy"),
     onclick: async () => {
       const ok = await copyText(code);
       if (ok) {
-        copyButton.textContent = "Copied ✓";
-        toast("Bookmark script copied — paste it into a new bookmark's URL field.");
-        setTimeout(() => { copyButton.textContent = "Copy the script"; }, 2500);
+        copyButton.textContent = T("verify.bm.copied");
+        toast(T("verify.bm.copiedToast"));
+        setTimeout(() => { copyButton.textContent = T("verify.bm.copy"); }, 2500);
       } else {
-        toast("Could not copy — drag the button instead.");
+        toast(T("verify.bm.copyFailed"));
       }
     },
   });
@@ -907,7 +916,7 @@ function renderBookmarklet() {
   );
   const note = el("div", {
     style: "font-size:12.5px;color:var(--muted);margin-top:8px",
-    text: "Bookmarklets are blocked on some phones and on Instagram's in-app browser — open this site in a real browser, and use the manual mark button on mobile.",
+    text: T("verify.bm.note"),
   });
   $("bookmarklet-slot").appendChild(note);
 }
@@ -917,18 +926,18 @@ function applyVerification(payload) {
   try {
     data = typeof payload === "string" ? JSON.parse(payload) : payload;
   } catch {
-    toast("That does not look like verifier output.");
+    toast(T("toast.notVerifierOutput"));
     return;
   }
   if (!data || !Array.isArray(data.dead)) {
-    toast("No \"dead\" list in that output.");
+    toast(T("toast.noDeadList"));
     return;
   }
   if (!result) {
     // Results arrived before an export was imported (fresh browser, or the
     // export was never loaded here). Hold on to them until one is.
     try { localStorage.setItem(PENDING_KEY, JSON.stringify(data)); } catch { /* ignore */ }
-    toast("Verifier results saved — import your export to apply them.");
+    toast(T("toast.verifyPending"));
     return;
   }
   let added = 0;
@@ -948,7 +957,7 @@ function applyVerification(payload) {
   // default but keep the count on screen so they can be brought back.
   if (added) $("hide-gone").checked = true;
   renderList();
-  toast(`Marked ${fmt(added)} account(s) as gone, ${fmt((data.alive || []).length)} confirmed to exist.`);
+  toast(T("toast.markedGone", { n: fmt(added), m: fmt((data.alive || []).length) }));
   $("verify-panel").open = false;
 }
 
@@ -968,7 +977,7 @@ function readVerifyHash() {
     const json = decodeURIComponent(escape(atob(decodeURIComponent(match[1]))));
     applyVerification(json);
   } catch {
-    toast("Could not read the verifier result from the link.");
+    toast(T("toast.notALink"));
   }
   history.replaceState(null, "", location.pathname + location.search);
 }
@@ -1006,7 +1015,7 @@ function downloadCsv() {
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  toast("CSV downloaded.");
+  toast(T("toast.csvDone"));
 }
 
 /* ------------------------------------------------------------------ */
@@ -1063,53 +1072,53 @@ document.querySelectorAll(".tab").forEach((tab) => {
 });
 
 $("open-next").addEventListener("click", () => {
-  if (!result) { toast("Import an export first."); return; }
+  if (!result) { toast(T("toast.importFirst")); return; }
   const pool = filteredList().length ? filteredList() : currentList();
   const next = pool.find((account) => !state.handled.has(keyOf(account)))
     || currentList().find((account) => !state.handled.has(keyOf(account)));
   if (!next) {
-    toast("Everything in this list is checked off.");
+    toast(T("toast.allChecked"));
     return;
   }
   state.handled.add(keyOf(next));
   saveState();
   openProfile(profileUrl(next.username));
   renderList();
-  toast("Opened @" + next.username + " and checked it off.");
+  toast(T("toast.openedAndChecked", { u: next.username }));
 });
 
 $("copy-list").addEventListener("click", async () => {
-  if (!result) { toast("Import an export first."); return; }
+  if (!result) { toast(T("toast.importFirst")); return; }
   const names = filteredList().map((account) => account.username);
   if (!names.length) {
-    toast("Nothing to copy.");
+    toast(T("toast.nothingToCopy"));
     return;
   }
   const ok = await copyText(names.join("\n"));
-  toast(ok ? `Copied ${fmt(names.length)} usernames.` : "Could not copy — use the CSV instead.");
+  toast(ok ? T("toast.copiedN", { n: fmt(names.length) }) : T("toast.copyFallback"));
 });
 
 $("download-csv").addEventListener("click", () => {
-  if (!result) { toast("Import an export first."); return; }
+  if (!result) { toast(T("toast.importFirst")); return; }
   downloadCsv();
 });
 
 $("reset-progress").addEventListener("click", () => {
   if (!state.handled.size) {
-    toast("Nothing to reset.");
+    toast(T("toast.nothingToReset"));
     return;
   }
-  if (!confirm("Clear every check-off for this export? Gone marks are kept.")) return;
+  if (!confirm(T("toast.confirmReset"))) return;
   state.handled.clear();
   saveState();
   renderList();
-  toast("Check-offs cleared.");
+  toast(T("toast.resetDone"));
 });
 
 $("apply-verify").addEventListener("click", () => {
   const text = $("verify-paste").value.trim();
   if (!text) {
-    toast("Paste the verifier output first.");
+    toast(T("toast.pasteFirst"));
     return;
   }
   applyVerification(text);
@@ -1120,14 +1129,14 @@ $("server-check").addEventListener("click", checkWithServer);
 
 $("clear-dead").addEventListener("click", () => {
   if (!state.gone.size) {
-    toast("No gone marks to clear.");
+    toast(T("toast.noGoneMarks"));
     return;
   }
   state.gone.clear();
   state.alive.clear();
   saveState();
   renderList();
-  toast("Gone marks cleared.");
+  toast(T("toast.goneCleared"));
 });
 
 
@@ -1136,7 +1145,7 @@ $("clear-dead").addEventListener("click", () => {
 /* ------------------------------------------------------------------ */
 
 $("export-progress").addEventListener("click", () => {
-  if (!result) { toast("Import an export first."); return; }
+  if (!result) { toast(T("toast.importFirst")); return; }
   const payload = {
     app: "unfollow-checker",
     version: 1,
@@ -1154,8 +1163,10 @@ $("export-progress").addEventListener("click", () => {
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  $("progress-note").textContent =
-    `Saved ${state.handled.size} check-off(s) and ${state.gone.size} gone mark(s).`;
+  $("progress-note").textContent = T("devices.savedNote", {
+    n: fmt(state.handled.size),
+    m: fmt(state.gone.size),
+  });
 });
 
 $("import-progress").addEventListener("click", () => $("progress-file").click());
@@ -1164,20 +1175,20 @@ $("progress-file").addEventListener("change", async (event) => {
   const file = event.target.files && event.target.files[0];
   event.target.value = "";
   if (!file) return;
-  if (!result) { toast("Import your export first, then restore progress."); return; }
+  if (!result) { toast(T("toast.restoreFirst")); return; }
   let data;
   try {
     data = JSON.parse(await file.text());
   } catch {
-    toast("That file is not valid JSON.");
+    toast(T("toast.notJson"));
     return;
   }
   if (!data || !Array.isArray(data.handled)) {
-    toast("That does not look like a progress file.");
+    toast(T("toast.notProgress"));
     return;
   }
   if (data.fingerprint && data.fingerprint !== fingerprint) {
-    if (!confirm("That progress belongs to a different export. Merge it into this one anyway?")) return;
+    if (!confirm(T("toast.confirmMerge"))) return;
   }
   let added = 0;
   for (const key of data.handled) { if (!state.handled.has(key)) { state.handled.add(key); added += 1; } }
@@ -1186,9 +1197,12 @@ $("progress-file").addEventListener("change", async (event) => {
   saveState();
   if (state.gone.size) $("hide-gone").checked = true;
   renderList();
-  $("progress-note").textContent =
-    `Restored — ${state.handled.size} check-off(s), ${state.gone.size} gone mark(s) (${added} new).`;
-  toast(`Restored ${added} check-off(s).`);
+  $("progress-note").textContent = T("devices.restoredNote", {
+    n: fmt(state.handled.size),
+    m: fmt(state.gone.size),
+    added: fmt(added),
+  });
+  toast(T("toast.restoredN", { n: fmt(added) }));
 });
 
 $("new-export").addEventListener("click", () => {
@@ -1198,6 +1212,17 @@ $("new-export").addEventListener("click", () => {
 });
 
 window.addEventListener("hashchange", readVerifyHash);
+
+/* A language switch re-renders every dynamic string that is already on screen. */
+document.addEventListener("uc:langchange", () => {
+  if (!result) return;
+  renderStats();
+  renderWarnings();
+  renderIntegrity();
+  renderBookmarklet();
+  renderHistory();
+  renderList();
+});
 
 /* Boot: restore the last export (so a verifier link lands on a populated page),
    then apply any hash payload or queued verifier output. */

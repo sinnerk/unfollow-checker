@@ -271,6 +271,12 @@ table.mini td.num, table.mini th.num { text-align: right; font-variant-numeric: 
 .diff-list { margin: 0; max-height: 340px; overflow: auto; }
 .diff-block .row { padding: 9px 12px; }
 .bm-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.lang-switch {
+  min-height: 36px; padding: 0 6px; font: inherit; font-size: 13px;
+  color: var(--muted); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; cursor: pointer;
+}
+.lang-switch:hover { color: var(--text); border-color: var(--muted-2); }
 
 /* ---------- verify / steps ---------- */
 .steps { counter-reset: s; list-style: none; padding: 0; margin: 0; }

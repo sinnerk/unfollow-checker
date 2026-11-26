@@ -57,6 +57,7 @@
   ol.tight li b { color: var(--text); }
   .note { font-size: 13.5px; color: var(--muted); border-left: 3px solid var(--line); padding-left: 12px; margin: 10px 0; }
 </style>
+<script src="js/i18n.js"></script>
 </head>
 <body>
 
@@ -74,9 +75,17 @@
       Unfollow Checker
     </a>
     <nav>
-      <a href="app.html">Tool</a>
-      <a href="privacy.html" class="opt">Privacy</a>
-    </nav>
+      <a href="app.html" data-i18n="nav.tool">Tool</a>
+      <a href="privacy.html" class="opt" data-i18n="nav.privacy">Privacy</a>
+          <select class="lang-switch" aria-label="Language">
+        <option value="en">EN</option>
+        <option value="es">ES</option>
+        <option value="pt">PT</option>
+        <option value="hi">हि</option>
+        <option value="id">ID</option>
+        <option value="ja">JA</option>
+      </select>
+</nav>
   </div>
 </header>
 
@@ -202,7 +211,7 @@
 <footer class="site">
   <div class="wrap">
     <span>Unfollow Checker — free, open source, local-first.</span>
-    <a href="app.html">Tool</a>
+    <a href="app.html" data-i18n="nav.tool">Tool</a>
     <a href="privacy.html">Privacy</a>
     <a href="https://github.com/sinnerk/unfollow-checker" rel="noopener">Source</a>
   </div>

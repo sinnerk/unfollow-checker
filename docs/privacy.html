@@ -15,6 +15,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="assets/icon.png">
 <link rel="stylesheet" href="assets/site.css">
+<script src="js/i18n.js"></script>
 </head>
 <body>
 
@@ -32,9 +33,17 @@
       Unfollow Checker
     </a>
     <nav>
-      <a href="app.html">Tool</a>
-      <a href="tutorials.html">Tutorials</a>
-    </nav>
+      <a href="app.html" data-i18n="nav.tool">Tool</a>
+      <a href="tutorials.html" data-i18n="nav.tutorials">Tutorials</a>
+          <select class="lang-switch" aria-label="Language">
+        <option value="en">EN</option>
+        <option value="es">ES</option>
+        <option value="pt">PT</option>
+        <option value="hi">हि</option>
+        <option value="id">ID</option>
+        <option value="ja">JA</option>
+      </select>
+</nav>
   </div>
 </header>
 
@@ -84,8 +93,8 @@
 <footer class="site">
   <div class="wrap">
     <span>Unfollow Checker — free, open source, local-first.</span>
-    <a href="app.html">Tool</a>
-    <a href="tutorials.html">Tutorials</a>
+    <a href="app.html" data-i18n="nav.tool">Tool</a>
+    <a href="tutorials.html" data-i18n="nav.tutorials">Tutorials</a>
     <a href="https://github.com/sinnerk/unfollow-checker" rel="noopener">Source</a>
   </div>
 </footer>

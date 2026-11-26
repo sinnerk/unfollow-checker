@@ -8,7 +8,7 @@
  * Bump UC_CACHE_VERSION whenever any cached file changes — the old cache is
  * dropped on activate and the new one is filled on install.
  */
-const UC_CACHE_VERSION = "uc-v1";
+const UC_CACHE_VERSION = "uc-v2";
 const PRECACHE = [
   "./",
   "app.html",
@@ -20,6 +20,7 @@ const PRECACHE = [
   "assets/og.png",
   "js/parse.js",
   "js/app.js",
+  "js/i18n.js",
   "vendor/jszip.min.js",
   "manifest.webmanifest",
 ];

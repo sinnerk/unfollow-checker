@@ -18,6 +18,7 @@
 <link rel="icon" href="assets/icon.png">
 <link rel="apple-touch-icon" href="assets/icon.png">
 <link rel="stylesheet" href="assets/site.css">
+<script src="js/i18n.js"></script>
 <script type="application/ld+json">
 [
   {
@@ -88,10 +89,18 @@
       Unfollow Checker
     </a>
     <nav>
-      <a href="#features" class="opt">Features</a>
-      <a href="tutorials.html">Tutorials</a>
-      <a href="privacy.html" class="opt">Privacy</a>
-      <a class="nav-cta" href="app.html">Open the tool</a>
+      <a href="#features" class="opt" data-i18n="nav.features">Features</a>
+      <a href="tutorials.html" data-i18n="nav.tutorials">Tutorials</a>
+      <a href="privacy.html" class="opt" data-i18n="nav.privacy">Privacy</a>
+      <select class="lang-switch" aria-label="Language">
+        <option value="en">EN</option>
+        <option value="es">ES</option>
+        <option value="pt">PT</option>
+        <option value="hi">हि</option>
+        <option value="id">ID</option>
+        <option value="ja">JA</option>
+      </select>
+      <a class="nav-cta" href="app.html" data-i18n="nav.tool">Open the tool</a>
     </nav>
   </div>
 </header>
@@ -101,21 +110,21 @@
   <!-- ---------------- hero ---------------- -->
   <section class="wrap hero-grid">
     <div class="hero-copy">
-      <span class="eyebrow">Free · open source · no login</span>
-      <h1>See exactly who doesn't follow you back.</h1>
-      <p class="lede">
+      <span class="eyebrow" data-i18n="hero.eyebrow">Free · open source · no login</span>
+      <h1 data-i18n="hero.title">See exactly who doesn't follow you back.</h1>
+      <p class="lede" data-i18n="hero.lede">
         Drop your Instagram data export and get the real list in seconds — plus the fans you never
         followed back, and the dead accounts still sitting in your following. Everything is computed
         inside your own browser tab.
       </p>
       <div class="cta-row">
-        <a class="btn primary" href="app.html">Open the tool →</a>
-        <a class="btn ghost" href="tutorials.html#download">Get your export (2 min)</a>
+        <a class="btn primary" href="app.html" data-i18n="hero.cta">Open the tool →</a>
+        <a class="btn ghost" href="tutorials.html#download" data-i18n="hero.getExport">Get your export (2 min)</a>
       </div>
       <ul class="checks">
-        <li>No password, no scraping, no automation</li>
-        <li>Your ZIP never leaves your device</li>
-        <li>Works on a phone, and it's free forever</li>
+        <li data-i18n="hero.check1">No password, no scraping, no automation</li>
+        <li data-i18n="hero.check2">Your ZIP never leaves your device</li>
+        <li data-i18n="hero.check3">Works on a phone, and it's free forever</li>
       </ul>
     </div>
 
@@ -174,95 +183,102 @@
 
   <!-- ---------------- features ---------------- -->
   <section class="wrap section" id="features">
-    <h2 class="section-title">Everything you need to clean up your following</h2>
-    <p class="section-sub">Not a screenshot of the maths — the actual lists, with the boring edge cases handled.</p>
+    <h2 class="section-title" data-i18n="features.title">Everything you need to clean up your following</h2>
+    <p class="section-sub" data-i18n="features.sub">Not a screenshot of the maths — the actual lists, with the boring edge cases handled.</p>
 
     <div class="feature-grid">
       <article class="feature">
         <div class="ficon">⚖️</div>
-        <h3>Exact counts</h3>
-        <p>Following, followers, mutual, fans and not-following-back, reconciled on casefolded handles with duplicate rows dropped. Split files, HTML exports and old <code>/_u/</code> links all parse.</p>
+        <h3 data-i18n="features.exact.title">Exact counts</h3>
+        <p data-i18n="features.exact.body">Following, followers, mutual, fans and not-following-back, reconciled on casefolded handles with duplicate rows dropped. Split files, HTML exports and old <code>/_u/</code> links all parse.</p>
       </article>
       <article class="feature">
         <div class="ficon">🧾</div>
-        <h3>Export integrity panel</h3>
-        <p>See exactly which files were read, how many rows each held, how many duplicates were dropped, and whether Instagram's own insights page disagrees with your follower list.</p>
+        <h3 data-i18n="features.integrity.title">Export integrity panel</h3>
+        <p data-i18n="features.integrity.body">See exactly which files were read, how many rows each held, how many duplicates were dropped, and whether Instagram's own insights page disagrees with your follower list.</p>
       </article>
       <article class="feature">
         <div class="ficon">✅</div>
-        <h3>Open next &amp; check off</h3>
-        <p>One button opens the next unchecked profile in a new tab and records it, so you never lose your place. Progress is saved per export, not globally.</p>
+        <h3 data-i18n="features.loop.title">Open next &amp; check off</h3>
+        <p data-i18n="features.loop.body">One button opens the next unchecked profile in a new tab and records it, so you never lose your place. Progress is saved per export, not globally.</p>
       </article>
       <article class="feature">
         <div class="ficon">🪦</div>
-        <h3>Dead-account finder</h3>
-        <p>Instagram hides deleted and deactivated accounts in plain sight. Run the optional one-click check inside your own logged-in tab and they get flagged.</p>
+        <h3 data-i18n="features.dead.title">Dead-account finder</h3>
+        <p data-i18n="features.dead.body">Instagram hides deleted and deactivated accounts in plain sight. Run the optional one-click check inside your own logged-in tab and they get flagged.</p>
       </article>
       <article class="feature">
         <div class="ficon">📤</div>
-        <h3>Take the list with you</h3>
-        <p>Search, filter, copy the usernames, or download a CSV that includes follow dates and verification status. No account needed to export.</p>
+        <h3 data-i18n="features.export.title">Take the list with you</h3>
+        <p data-i18n="features.export.body">Search, filter, copy the usernames, or download a CSV that includes follow dates and verification status. No account needed to export.</p>
+      </article>
+      <article class="feature">
+        <div class="ficon">📈</div>
+        <h3 data-i18n="features.diff.title">Changes between exports</h3>
+        <p data-i18n="features.diff.body">Import a newer export any time and see exactly who unfollowed you, who started following, who you unfollowed and who you newly followed — computed locally from the two snapshots.</p>
       </article>
       <article class="feature">
         <div class="ficon">🔒</div>
-        <h3>Truly local</h3>
-        <p>No backend, no analytics, no third-party scripts. The zip reader is bundled with the page, so the site works with your network switched off.</p>
+        <h3 data-i18n="features.local.title">Truly local</h3>
+        <p data-i18n="features.local.body">No backend, no analytics, no third-party scripts. The zip reader is bundled with the page, so the site works with your network switched off.</p>
       </article>
     </div>
   </section>
 
   <!-- ---------------- steps ---------------- -->
   <section class="wrap section">
-    <h2 class="section-title">Three steps</h2>
+    <h2 class="section-title" data-i18n="steps.title">Three steps</h2>
     <div class="step-grid">
       <div class="step">
         <span class="num-pill">1</span>
-        <h3>Download your export</h3>
-        <p>Accounts Center → Your information and permissions → Download your information. Pick JSON and tick only <b>Followers and following</b> so the file stays small.</p>
-        <a href="tutorials.html#download">Walkthrough →</a>
+        <h3 data-i18n="steps.one.title">Download your export</h3>
+        <p data-i18n="steps.one.body">Accounts Center → Your information and permissions → Download your information. Pick JSON and tick only <b>Followers and following</b> so the file stays small.</p>
+        <a href="tutorials.html#download" data-i18n="steps.one.link">Walkthrough →</a>
       </div>
       <div class="step">
         <span class="num-pill">2</span>
-        <h3>Drop the ZIP</h3>
-        <p>The page reads it in memory and compares both lists locally. A 450 MB export takes about five seconds; nothing is transmitted anywhere.</p>
-        <a href="app.html">Open the tool →</a>
+        <h3 data-i18n="steps.two.title">Drop the ZIP</h3>
+        <p data-i18n="steps.two.body">The page reads it in memory and compares both lists locally. A 450 MB export takes about five seconds; nothing is transmitted anywhere.</p>
+        <a href="app.html" data-i18n="steps.two.link">Open the tool →</a>
       </div>
       <div class="step">
         <span class="num-pill">3</span>
-        <h3>Work the list</h3>
-        <p>Hit <b>Open next &amp; check off</b> and go down the list. Mark dead accounts as gone. Come back any time — your progress is remembered.</p>
-        <a href="tutorials.html#clean">How the cleanup loop works →</a>
+        <h3 data-i18n="steps.three.title">Work the list</h3>
+        <p data-i18n="steps.three.body">Hit <b>Open next &amp; check off</b> and go down the list. Mark dead accounts as gone. Come back any time — your progress is remembered.</p>
+        <a href="tutorials.html#clean" data-i18n="steps.three.link">How the cleanup loop works →</a>
       </div>
     </div>
   </section>
 
   <!-- ---------------- faq ---------------- -->
   <section class="wrap section">
-    <h2 class="section-title">Questions people actually ask</h2>
+    <h2 class="section-title" data-i18n="faq.title">Questions people actually ask</h2>
     <div class="faq">
       <details>
-        <summary>Is this allowed? Will Instagram ban me?</summary>
-        <p>You're reading a file Instagram gave you. There is no automation, no scraping and no login, so there is nothing for them to act on. The tool never unfollows for you — you click unfollow yourself.</p>
+        <summary data-i18n="faq.q1">Is this allowed? Will Instagram ban me?</summary>
+        <p data-i18n="faq.a1">You're reading a file Instagram gave you. There is no automation, no scraping and no login, so there is nothing for them to act on. The tool never unfollows for you — you click unfollow yourself.</p>
       </details>
       <details>
-        <summary>Why doesn't it unfollow people automatically?</summary>
-        <p>Instagram has no public unfollow API, and any site offering mass-unfollow is either running your password through a scraper or breaking the terms. The safe loop is: open profile → tap Unfollow → come back → next.</p>
+        <summary data-i18n="faq.q2">Why doesn't it unfollow people automatically?</summary>
+        <p data-i18n="faq.a2">Instagram has no public unfollow API, and any site offering mass-unfollow is either running your password through a scraper or breaking the terms. The safe loop is: open profile → tap Unfollow → come back → next.</p>
       </details>
       <details>
-        <summary>My export is HTML. Does it still work?</summary>
-        <p>Yes, but HTML exports silently drop older rows from long lists, which can make real followers look like non-followers. The integrity panel flags it. Re-download in JSON for an exact answer.</p>
+        <summary data-i18n="faq.q3">My export is HTML. Does it still work?</summary>
+        <p data-i18n="faq.a3">Yes, but HTML exports silently drop older rows from long lists, which can make real followers look like non-followers. The integrity panel flags it. Re-download in JSON for an exact answer.</p>
       </details>
       <details>
-        <summary>Someone shows up as not following back, but I'm sure they do.</summary>
-        <p>Three honest reasons: the export is a snapshot (a day or two old on big accounts), it's an HTML export, or the two lists were captured at different moments. Nothing is wrong with the maths in those cases — see <a href="tutorials.html#trouble">troubleshooting</a>.</p>
+        <summary data-i18n="faq.q4">Someone shows up as not following back, but I'm sure they do.</summary>
+        <p data-i18n="faq.a4">Three honest reasons: the export is a snapshot (a day or two old on big accounts), it's an HTML export, or the two lists were captured at different moments. Nothing is wrong with the maths in those cases.</p>
+        <p><a href="tutorials.html#trouble" data-i18n="footer.trouble">Troubleshooting</a></p>
       </details>
       <details>
-        <summary>How does it find deleted accounts?</summary>
-        <p>Instagram only answers "does this profile exist?" for a logged-in visitor, so the check runs as a bookmarklet inside your own Instagram tab, read-only, about one request per second. Results come back to this page. It refuses to run without a valid session and marks nothing if it can't verify.</p>
+        <summary data-i18n="faq.q5">How does it find deleted accounts?</summary>
+        <p data-i18n="faq.a5">Instagram only answers "does this profile exist?" for a logged-in visitor, so the check runs as a bookmarklet inside your own Instagram tab, read-only, about one request per second. Results come back to this page. It refuses to run without a valid session and marks nothing if it can't verify.</p>
       </details>
       <details>
-        <summary>Where is my data stored?</summary>
-        <p>In this browser's local storage: your check-offs and gone marks, keyed to that specific export. Nothing is synced, and "Reset" clears it. <a href="privacy.html">Full privacy notes →</a></p>
+        <summary data-i18n="faq.q6">Where is my data stored?</summary>
+        <p data-i18n="faq.a6">In this browser's local storage: your check-offs and gone marks, keyed to that specific export. Nothing is synced, and "Reset" clears it.</p>
+        <p><a href="privacy.html" data-i18n="faq.more">Full privacy notes →</a></p>
       </details>
     </div>
   </section>
@@ -271,10 +287,10 @@
   <section class="wrap section">
     <div class="cta-band">
       <div>
-        <h2>Ready when you are.</h2>
-        <p>Free, no account, works on your phone. About five seconds from ZIP to list.</p>
+        <h2 data-i18n="cta.title">Ready when you are.</h2>
+        <p data-i18n="cta.body">Free, no account, works on your phone. About five seconds from ZIP to list.</p>
       </div>
-      <a class="btn primary" href="app.html">Open the tool →</a>
+      <a class="btn primary" href="app.html" data-i18n="hero.cta">Open the tool →</a>
     </div>
   </section>
 
@@ -284,24 +300,24 @@
   <div class="wrap footer-grid">
     <div>
       <div class="brand" style="margin-bottom:8px">Unfollow Checker</div>
-      <p style="color:var(--muted);font-size:13.5px;margin:0">
+      <p style="color:var(--muted);font-size:13.5px;margin:0" data-i18n="footer.tagline">
         A local-first tool for auditing your Instagram following. Free and open source under MIT.
       </p>
     </div>
     <div>
-      <h4>Product</h4>
-      <a href="app.html">Open the tool</a>
-      <a href="tutorials.html">Tutorials</a>
-      <a href="tutorials.html#trouble">Troubleshooting</a>
+      <h4 data-i18n="footer.product">Product</h4>
+      <a href="app.html" data-i18n="nav.tool">Open the tool</a>
+      <a href="tutorials.html" data-i18n="nav.tutorials">Tutorials</a>
+      <a href="tutorials.html#trouble" data-i18n="footer.trouble">Troubleshooting</a>
     </div>
     <div>
-      <h4>Project</h4>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://github.com/sinnerk/unfollow-checker" rel="noopener">Source code</a>
+      <h4 data-i18n="footer.project">Project</h4>
+      <a href="privacy.html" data-i18n="nav.privacy">Privacy</a>
+      <a href="https://github.com/sinnerk/unfollow-checker" rel="noopener" data-i18n="footer.source">Source code</a>
     </div>
   </div>
   <div class="wrap" style="margin-top:18px;font-size:12.5px;color:var(--muted-2)">
-    Not affiliated with Instagram or Meta. Your export stays on your device.
+    <span data-i18n="footer.note">Not affiliated with Instagram or Meta. Your export stays on your device.</span>
   </div>
 </footer>
 <script>
