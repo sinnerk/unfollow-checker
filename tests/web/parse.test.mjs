@@ -6,7 +6,7 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { analyzeExport, cleanUsername, extractEntries, extractHtmlEntries } from "../../docs/js/parse.js";
+import { analyzeExport, cleanUsername, computeDiff, extractEntries, extractHtmlEntries } from "../../docs/js/parse.js";
 
 const TS = 1795502698;
 
@@ -149,4 +149,75 @@ test("reported follower count flags a truncated export", () => {
   assert.equal(result.info.integrity.complete, false);
   assert.ok(result.info.truncation);
   assert.ok(result.info.warnings[0].includes("superset"));
+});
+
+const T1 = 1_600_000_000; // follow dates in the old export
+const T2 = 1_700_000_000; // follow dates in the new export
+
+const account = (username, timestamp) => ({ username, timestamp: timestamp ?? null });
+
+test("computeDiff finds who left, who arrived, and both directions of unfollowing", () => {
+  const prev = {
+    followers: [account("kept", T1), account("leftme", T1), account("renamedaway", T1)],
+    following: [account("kept", T1), account("idropped", T1)],
+  };
+  const current = {
+    followers: [account("kept", T2), account("newfan", T2)],
+    following: [account("kept", T2), account("newfriend", T2)],
+  };
+  const diff = computeDiff(prev, current);
+  assert.deepEqual(diff.unfollowedYou.map((a) => a.username), ["leftme", "renamedaway"]);
+  assert.deepEqual(diff.newFollowers.map((a) => a.username), ["newfan"]);
+  assert.deepEqual(diff.youUnfollowed.map((a) => a.username), ["idropped"]);
+  assert.deepEqual(diff.newlyFollowed.map((a) => a.username), ["newfriend"]);
+  // timestamps travel with the snapshot they were seen in
+  assert.equal(diff.unfollowedYou[0].timestamp, T1);
+  assert.equal(diff.newFollowers[0].timestamp, T2);
+});
+
+test("computeDiff matching is case-insensitive and keeps display casing", () => {
+  const prev = { followers: [account("OldFan", T1)], following: [account("OldFan", T1)] };
+  const current = { followers: [account("oldfan", T2)], following: [account("OLDFAN", T2)] };
+  const diff = computeDiff(prev, current);
+  assert.equal(diff.unfollowedYou.length, 0);
+  assert.equal(diff.newFollowers.length, 0);
+  assert.equal(diff.youUnfollowed.length, 0);
+  assert.equal(diff.newlyFollowed.length, 0);
+});
+
+test("computeDiff on the same export is empty everywhere", () => {
+  const one = analyzeExport(zipFiles({ followers: ["alice", "bob"], following: ["bob"] }));
+  const diff = computeDiff(one, one);
+  assert.equal(diff.unfollowedYou.length, 0);
+  assert.equal(diff.newFollowers.length, 0);
+  assert.equal(diff.youUnfollowed.length, 0);
+  assert.equal(diff.newlyFollowed.length, 0);
+});
+
+test("computeDiff works straight off two analyzeExport results", () => {
+  const prev = analyzeExport(zipFiles({ followers: ["alice", "zoe"], following: ["alice"] }));
+  const current = analyzeExport(zipFiles({ followers: ["alice", "nia"], following: ["alice", "pia"] }));
+  const diff = computeDiff(prev, current);
+  assert.deepEqual(diff.unfollowedYou.map((a) => a.username), ["zoe"]);
+  assert.deepEqual(diff.newFollowers.map((a) => a.username), ["nia"]);
+  assert.deepEqual(diff.youUnfollowed.length, 0);
+  assert.deepEqual(diff.newlyFollowed.map((a) => a.username), ["pia"]);
+});
+
+test("computeDiff tolerates null/missing timestamps", () => {
+  const diff = computeDiff(
+    { followers: [account("a")], following: [account("b")] },
+    { followers: [account("c")], following: [account("d")] },
+  );
+  assert.equal(diff.unfollowedYou[0].timestamp, null);
+  assert.equal(diff.youUnfollowed[0].timestamp, null);
+});
+
+test("computeDiff sorts by the most recent follow date first", () => {
+  const prev = {
+    followers: [account("old", 1_000_000_000), account("recent", 1_500_000_000)],
+    following: [],
+  };
+  const diff = computeDiff(prev, { followers: [], following: [] });
+  assert.deepEqual(diff.unfollowedYou.map((a) => a.username), ["recent", "old"]);
 });

@@ -433,6 +433,52 @@ export function analyzeExport(files) {
   };
 }
 
+/* ------------------------------------------------------------------ */
+/* Comparing two exports ("what changed since last month?")            */
+/* ------------------------------------------------------------------ */
+
+const indexAccounts = (list) => {
+  const map = new Map();
+  for (const account of list || []) {
+    map.set(fold(account.username), account);
+  }
+  return map;
+};
+
+/**
+ * Compare an older export with the current one.
+ *
+ * prev/current: results from analyzeExport() (anything with .followers and
+ * .following arrays of {username, timestamp} works).
+ *
+ * Returns { unfollowedYou, newFollowers, youUnfollowed, newlyFollowed } —
+ * each an array of {username, timestamp} where timestamp is the follow date
+ * recorded in whichever snapshot the account appears in. Matching is
+ * case-insensitive, same as everywhere else in the parser.
+ */
+export function computeDiff(prev, current) {
+  const prevFollowers = indexAccounts(prev?.followers);
+  const curFollowers = indexAccounts(current?.followers);
+  const prevFollowing = indexAccounts(prev?.following);
+  const curFollowing = indexAccounts(current?.following);
+
+  const newestFirst = (a, b) =>
+    (b.timestamp || 0) - (a.timestamp || 0) ||
+    a.username.toLowerCase().localeCompare(b.username.toLowerCase());
+
+  const leftSide = (was, now) =>
+    [...was.values()]
+      .filter((account) => !now.has(fold(account.username)))
+      .sort(newestFirst);
+
+  return {
+    unfollowedYou: leftSide(prevFollowers, curFollowers),
+    newFollowers: leftSide(curFollowers, prevFollowers),
+    youUnfollowed: leftSide(prevFollowing, curFollowing),
+    newlyFollowed: leftSide(curFollowing, prevFollowing),
+  };
+}
+
 /** Stable fingerprint so check-offs stay attached to one export. */
 export async function fingerprintOf(files, result) {
   const parts = [
