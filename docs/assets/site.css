@@ -270,6 +270,7 @@ table.mini td.num, table.mini th.num { text-align: right; font-variant-numeric: 
 .diff-title { font-weight: 650; font-size: 14.5px; }
 .diff-list { margin: 0; max-height: 340px; overflow: auto; }
 .diff-block .row { padding: 9px 12px; }
+.bm-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
 /* ---------- verify / steps ---------- */
 .steps { counter-reset: s; list-style: none; padding: 0; margin: 0; }

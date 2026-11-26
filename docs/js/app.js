@@ -887,7 +887,24 @@ function renderBookmarklet() {
     text: "Check " + fmt(names.length) + " accounts",
     onclick: (event) => event.preventDefault(),
   });
-  $("bookmarklet-slot").replaceChildren(link);
+  const copyButton = el("button", {
+    class: "btn small",
+    type: "button",
+    text: "Copy the script",
+    onclick: async () => {
+      const ok = await copyText(code);
+      if (ok) {
+        copyButton.textContent = "Copied ✓";
+        toast("Bookmark script copied — paste it into a new bookmark's URL field.");
+        setTimeout(() => { copyButton.textContent = "Copy the script"; }, 2500);
+      } else {
+        toast("Could not copy — drag the button instead.");
+      }
+    },
+  });
+  $("bookmarklet-slot").replaceChildren(
+    el("div", { class: "bm-row" }, [link, copyButton]),
+  );
   const note = el("div", {
     style: "font-size:12.5px;color:var(--muted);margin-top:8px",
     text: "Bookmarklets are blocked on some phones and on Instagram's in-app browser — open this site in a real browser, and use the manual mark button on mobile.",
