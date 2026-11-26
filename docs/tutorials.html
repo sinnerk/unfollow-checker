@@ -7,9 +7,33 @@
 <meta name="description" content="Step by step: download your Instagram export, import it, read the lists, clean up, and verify dead accounts.">
 <link rel="canonical" href="https://sinnerk.github.io/unfollow-checker/tutorials.html">
 <meta name="theme-color" content="#0b0b10">
+<meta property="og:title" content="How to see who unfollowed you on Instagram (no apps, no login)">
+<meta property="og:description" content="Step by step: download your Instagram data export, import it, and read the exact lists. Runs in your browser, nothing is uploaded.">
+<meta property="og:url" content="https://sinnerk.github.io/unfollow-checker/tutorials.html">
+<meta property="og:type" content="article">
+<meta property="og:image" content="https://sinnerk.github.io/unfollow-checker/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://sinnerk.github.io/unfollow-checker/assets/og.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="assets/icon.png">
 <link rel="stylesheet" href="assets/site.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to see who unfollowed you on Instagram",
+  "description": "Download your Instagram data export and drop it on Unfollow Checker to get the exact list of accounts that don't follow you back.",
+  "totalTime": "PT5M",
+  "estimatedCost": { "@type": "MonetaryAmount", "currency": "USD", "value": "0" },
+  "step": [
+    { "@type": "HowToStep", "name": "Open Accounts Center", "text": "In the Instagram app: Profile, then the menu, then Accounts Center. On a computer the same path is at accountscenter.instagram.com." },
+    { "@type": "HowToStep", "name": "Request your information", "text": "Accounts Center: Your information and permissions, then Download your information. Pick the account, then Create export and choose Download to device." },
+    { "@type": "HowToStep", "name": "Pick JSON and only the follower lists", "text": "Choose format JSON, date range All time, and untick everything except Followers and following so the file stays small." },
+    { "@type": "HowToStep", "name": "Wait for the email", "text": "Instagram emails you a download link when the export is ready, from a few minutes to a few hours." },
+    { "@type": "HowToStep", "name": "Drop the ZIP on Unfollow Checker", "text": "Open the tool and drop the ZIP on the import box. It is read inside your browser tab and you get the exact lists in seconds." }
+  ]
+}
+</script>
 <style>
   .tut { display: grid; gap: 14px; }
   .tut .panel h2 { display: flex; align-items: center; gap: 10px; }

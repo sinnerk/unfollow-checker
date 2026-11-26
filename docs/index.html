@@ -11,13 +11,66 @@
 <meta property="og:description" content="Drop your Instagram export, get the exact list. Runs entirely in your browser — no login, no upload.">
 <meta property="og:url" content="https://sinnerk.github.io/unfollow-checker/">
 <meta property="og:type" content="website">
-<meta property="og:image" content="assets/og.png">
+<meta property="og:image" content="https://sinnerk.github.io/unfollow-checker/assets/og.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="assets/og.png">
+<meta name="twitter:image" content="https://sinnerk.github.io/unfollow-checker/assets/og.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="assets/icon.png">
 <link rel="apple-touch-icon" href="assets/icon.png">
 <link rel="stylesheet" href="assets/site.css">
+<script type="application/ld+json">
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Unfollow Checker",
+    "url": "https://sinnerk.github.io/unfollow-checker/",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any (web browser)",
+    "description": "Free tool that shows who doesn't follow you back on Instagram. Reads your own data export inside your browser: no login, no scraping, nothing uploaded.",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "isAccessibleForFree": true,
+    "license": "https://opensource.org/licenses/MIT",
+    "featureList": "Doesn't-follow-back list, fans, mutual, export integrity panel, progress check-offs, CSV export, dead-account check, offline capable"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Is this allowed? Will Instagram ban me?",
+        "acceptedAnswer": { "@type": "Answer", "text": "You're reading a file Instagram gave you. There is no automation, no scraping and no login, so there is nothing for them to act on. The tool never unfollows for you — you click unfollow yourself." }
+      },
+      {
+        "@type": "Question",
+        "name": "Why doesn't it unfollow people automatically?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Instagram has no public unfollow API, and any site offering mass-unfollow is either running your password through a scraper or breaking the terms. The safe loop is: open profile, tap Unfollow, come back, next." }
+      },
+      {
+        "@type": "Question",
+        "name": "My export is HTML. Does it still work?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes, but HTML exports silently drop older rows from long lists, which can make real followers look like non-followers. The integrity panel flags it. Re-download in JSON for an exact answer." }
+      },
+      {
+        "@type": "Question",
+        "name": "Someone shows up as not following back, but I'm sure they do.",
+        "acceptedAnswer": { "@type": "Answer", "text": "The export is a snapshot (a day or two old on big accounts), it may be an HTML export, or the two lists were captured at different moments. Nothing is wrong with the maths in those cases." }
+      },
+      {
+        "@type": "Question",
+        "name": "How does it find deleted accounts?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Instagram only answers \"does this profile exist?\" for a logged-in visitor, so the check runs as a bookmarklet inside your own Instagram tab, read-only, about one request per second. Results come back to this page." }
+      },
+      {
+        "@type": "Question",
+        "name": "Where is my data stored?",
+        "acceptedAnswer": { "@type": "Answer", "text": "In this browser's local storage: your check-offs and gone marks, keyed to that specific export. Nothing is synced, and Reset clears it." }
+      }
+    ]
+  }
+]
+</script>
 </head>
 <body>
 
